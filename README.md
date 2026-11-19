@@ -1,28 +1,25 @@
 # github-island
 
+<img src="docs/assets/banner.png" alt="GitHub Island: an isometric island that grows with your public GitHub activity">
+
 An isometric island, drawn as one animated SVG, that grows with public GitHub activity.
 
-<img src="https://raw.githubusercontent.com/AndrewDongminYoo/github-island/output/island.svg" alt="Animated isometric island grown from public GitHub activity, with palms, sea animals and visitors in translucent water">
+**[Playground](https://andrewdongminyoo.github.io/github-island/)** · [Usage](#usage) · [Activity mapping](#activity-mapping) · [Published output](https://github.com/AndrewDongminYoo/github-island/tree/output)
 
-The image above is live: it is the file that the daily workflow publishes on the [`output` branch](https://github.com/AndrewDongminYoo/github-island/tree/output), next to its `state.json` and `manifest.json`.
+<table>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/AndrewDongminYoo/github-island/output/island.svg" alt="Animated isometric island grown from public GitHub activity, with palms, sea animals and visitors in translucent water" width="260"><br><b>Live</b></td>
+    <td align="center"><img src="examples/quiet.svg" alt="An island with two palms and a few fish" width="260"><br><b>Quiet</b></td>
+    <td align="center"><img src="examples/builder.svg" alt="An island with dolphins, turtles, rays and a whale shark in the water" width="260"><br><b>Mostly pull requests</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="examples/reviewer.svg" alt="An island with parasols, a canoe, float rings and three bungalows on a jetty" width="260"><br><b>Mostly reviews</b></td>
+    <td align="center"><img src="examples/maintainer.svg" alt="An island with three satellite islets and many glints on the water" width="260"><br><b>Many stars and forks</b></td>
+    <td align="center"><img src="examples/full.svg" alt="An island with every animal, every visitor, all reefs and all islets" width="260"><br><b>Everything</b></td>
+  </tr>
+</table>
 
-## Status
-
-This is an early prototype that runs end to end.
-The package collects public GitHub activity, reconciles it into a growth state, draws the island for that state, validates the image, and publishes the image, the state and a manifest together.
-The first publication was a manual bootstrap run on 2026-11-19, recorded in [the publication note](docs/notes/2026-11-19-first-publication.md).
-Scheduled runs have not been observed yet, so nothing here claims that they start on time.
-The pipeline comes from [github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium), and [the port plan](docs/plans/2026-11-19-pipeline-port.md) records the steps and the decisions.
-
-## How it works
-
-- The scene is modelled in 3D world units in Python, projected to an isometric view, and painted from far to near.
-- The output is one SVG file with no script, no canvas and no external assets, so it renders inside an `<img>` tag, which is how a README shows it.
-- CSS keyframes move the palm fronds, the ripples, the glints and the small waves on the beach.
-- SMIL moves the sea animals and the canoe along paths that lie in a plane below or on the water surface.
-- The water shading is filter lighting on a noise height map, blended over the scene.
-- Shapes that repeat are defined once and placed with `use`: the fronds of two palm crowns, the bungalow, a jetty segment, a post and a glint. The projection is isometric, so a copy only needs a translation.
-- The transparent variant carries no text and no backdrop, so it sits on light and dark pages alike; only the shadow under the block follows `prefers-color-scheme`.
+**Live** is the file that the daily workflow publishes on the [`output` branch](https://github.com/AndrewDongminYoo/github-island/tree/output), next to its `state.json` and `manifest.json`; the other five are fixed examples from `examples/`.
 
 ## Activity mapping
 
@@ -42,26 +39,6 @@ An outside contribution is a pull request or an issue opened in a public reposit
 Visitors follow whichever of the two signals is larger, because both are work done for someone else.
 
 The number and height of the palms follow overall growth, which the prototype takes as the mean of pull requests, reviews and issues.
-
-**Quiet**
-
-![An island with two palms and a few fish](examples/quiet.svg)
-
-**Mostly pull requests**
-
-![An island with dolphins, turtles, rays and a whale shark in the water](examples/builder.svg)
-
-**Mostly reviews**
-
-![An island with parasols, a canoe, float rings and three bungalows on a jetty](examples/reviewer.svg)
-
-**Many stars and forks**
-
-![An island with three satellite islets and many glints on the water](examples/maintainer.svg)
-
-**Everything**
-
-![An island with every animal, every visitor, all reefs and all islets](examples/full.svg)
 
 ## Usage
 
@@ -128,6 +105,8 @@ A scheduled run fails with `Output branch is absent` until one manual dispatch w
 
 ## Playground
 
+Try it at [andrewdongminyoo.github.io/github-island](https://andrewdongminyoo.github.io/github-island/).
+
 `playground/index.html` is a page with a slider for each signal and a choice of growth stage.
 It redraws the island on every change, shows its size against the byte budget, and keeps the settings in the address so that a view can be shared.
 
@@ -141,6 +120,24 @@ python -m http.server --directory work/site
 ```
 
 The `Playground` workflow builds the same site and deploys it to GitHub Pages on a push to `main`.
+
+## Status
+
+This is an early prototype that runs end to end.
+The package collects public GitHub activity, reconciles it into a growth state, draws the island for that state, validates the image, and publishes the image, the state and a manifest together.
+The first publication was a manual bootstrap run on 2026-11-19, recorded in [the publication note](docs/notes/2026-11-19-first-publication.md).
+Scheduled runs have not been observed yet, so nothing here claims that they start on time.
+The pipeline comes from [github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium), and [the port plan](docs/plans/2026-11-19-pipeline-port.md) records the steps and the decisions.
+
+## How it works
+
+- The scene is modelled in 3D world units in Python, projected to an isometric view, and painted from far to near.
+- The output is one SVG file with no script, no canvas and no external assets, so it renders inside an `<img>` tag, which is how a README shows it.
+- CSS keyframes move the palm fronds, the ripples, the glints and the small waves on the beach.
+- SMIL moves the sea animals and the canoe along paths that lie in a plane below or on the water surface.
+- The water shading is filter lighting on a noise height map, blended over the scene.
+- Shapes that repeat are defined once and placed with `use`: the fronds of two palm crowns, the bungalow, a jetty segment, a post and a glint. The projection is isometric, so a copy only needs a translation.
+- The transparent variant carries no text and no backdrop, so it sits on light and dark pages alike; only the shadow under the block follows `prefers-color-scheme`.
 
 ## Development
 

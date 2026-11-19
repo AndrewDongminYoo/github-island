@@ -11,3 +11,4 @@ dist/
 *.egg-info/
 work/
 *.png
+!docs/assets/banner.png
