@@ -2,7 +2,7 @@
 
 An isometric island, drawn as one animated SVG, that is meant to grow with public GitHub activity.
 
-![An isometric island with palms, a satellite islet, reefs and fish in translucent water](examples/island.svg)
+![An isometric island with palms, parasols, a stilt bungalow, a canoe and sea animals in translucent water](examples/island.svg)
 
 ## Status
 
@@ -16,65 +16,69 @@ Collecting real GitHub activity, keeping growth between runs, and publishing the
 - The scene is modelled in 3D world units in Python, projected to an isometric view, and painted from far to near.
 - The output is one SVG file with no script, no canvas and no external assets, so it renders inside an `<img>` tag, which is how a README shows it.
 - CSS keyframes move the palm fronds, the ripples, the glints and the small waves on the beach.
-- SMIL moves the fish and the rays along paths that lie in a plane below the water surface.
+- SMIL moves the sea animals and the canoe along paths that lie in a plane below or on the water surface.
 - The water shading is filter lighting on a noise height map, blended over the scene.
 - The transparent variant carries no text and no backdrop, so it sits on light and dark pages alike; only the shadow under the block follows `prefers-color-scheme`.
 
 ## Activity mapping
 
-The prototype maps five signals, each from 0 to 1, to parts of the island.
+The island is always the same island.
+What changes with activity is who comes to it.
+Each signal is a number from 0 to 1.
 
-| Signal        | What grows                          |
-| ------------- | ----------------------------------- |
-| Pull requests | Number and height of palms, bushes  |
-| Reviews       | Size of the fish schools, rays      |
-| Issues        | Number of reefs                     |
-| Stars         | Glints on the water                 |
-| Forks         | Satellite islets around the island  |
+| Signal        | What it brings                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------- |
+| Pull requests | Sea animals, larger with more activity: fish, then turtles, rays, a pod of dolphins, a whale shark  |
+| Reviews       | Visitors: float rings, then a canoe, parasols with sunbathers, and up to three bungalows on a jetty |
+| Issues        | Reefs on the seabed                                                                                 |
+| Stars         | Glints on the water                                                                                 |
+| Forks         | Satellite islets around the island                                                                  |
 
-This mapping is a placeholder.
-The planned direction is that pull requests attract larger animals and reviews bring visitors to the island.
+The number and height of the palms follow overall growth, which the prototype takes as the mean of pull requests, reviews and issues.
 
-The same generator gives a different island for each profile.
+**Quiet**
+
+![An island with two palms and a few fish](examples/quiet.svg)
 
 **Mostly pull requests**
 
-![An island with a dense palm grove and little sea life](examples/builder.svg)
+![An island with dolphins, turtles, rays and a whale shark in the water](examples/builder.svg)
 
-**Mostly reviews and issues**
+**Mostly reviews**
 
-![An island with few palms, many reefs, fish schools and one islet](examples/reviewer.svg)
+![An island with parasols, a canoe, float rings and three bungalows on a jetty](examples/reviewer.svg)
 
 **Many stars and forks**
 
 ![An island with three satellite islets and many glints on the water](examples/maintainer.svg)
+
+**Everything**
+
+![An island with every animal, every visitor, all reefs and all islets](examples/full.svg)
 
 ## Usage
 
 The generator needs Python 3 and only the standard library.
 
 ```bash
-python3 generate.py OUTPUT.svg BUNGALOWS [PROFILE] [transparent]
+python3 generate.py OUTPUT.svg [PROFILE] [transparent]
 ```
 
-- `BUNGALOWS` is the number of stilt bungalows, from 0 to 7. With 0 the island is deserted, sits in the middle of the block, and follows `PROFILE`.
 - `PROFILE` is five comma-separated numbers from 0 to 1 in the order pull requests, reviews, issues, stars, forks.
 - `transparent` removes the backdrop and the title text and crops the view to the block.
 
 ```bash
-python3 generate.py examples/island.svg 0 0.6,0.6,0.6,0.6,0.34 transparent
-python3 generate.py examples/lagoon.svg 7 transparent
+python3 generate.py examples/island.svg 0.65,0.65,0.6,0.6,0.34 transparent
 ```
 
-The second command draws the inhabited variant.
-
-![A lagoon with seven stilt bungalows, jetties, float rings and a canoe](examples/lagoon.svg)
+Open `preview.html` in a browser to see the example profiles side by side.
 
 ## Known limits
 
 - The viewpoint is fixed. An image in a README cannot run script or receive pointer input, so there is no camera control, no interaction and no physics.
-- Dense scenes are large. The inhabited example is about 247 kB and the island examples are between 112 kB and 176 kB.
-- Objects are sorted by the distance of their centre, so objects that pass through each other are painted in the wrong order.
+- Dense scenes are large. The examples are between 79 kB and 278 kB.
+- Objects are sorted by the distance of their centre, so objects that pass through each other are painted in the wrong order. Sea animals and the canoe also pass under jetties and through posts without being hidden by them.
+- Animals and visitors hold one pose. They move along a path, but they do not jump, walk or react to each other.
 - The water shading recomputes a filter on every frame. Its playback cost is not measured.
 - Rendering and animation were checked in a GitHub README on the web in Chrome with the dark theme, and in the GitHub mobile app on iOS. Other browsers and the light theme on GitHub are not confirmed yet.
 
