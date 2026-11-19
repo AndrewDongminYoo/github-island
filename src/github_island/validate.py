@@ -24,9 +24,14 @@ MAX_VALUE = 8192
 VIEW_BOX = "200 90 1000 790"
 IDENTIFIER = r"[A-Za-z_][A-Za-z0-9_-]*"
 REFERENCE = re.compile(r"url\(#(" + IDENTIFIER + r")\)")
-# Geometry and paint values: digits, signs, separators, letters and "#" for
-# colors, path commands, keywords and transform functions.
-PLAIN = re.compile(r"[A-Za-z0-9#.,;() \-+%]*")
+# Geometry, colors and keywords: digits, signs, separators, letters and "#".
+# The alphabet has no parenthesis, so no function notation (url, var, image-set,
+# in any letter case) can pass as a plain value. The attributes that do take a
+# function have their own closed grammar below.
+PLAIN = re.compile(r"[A-Za-z0-9#.,; \-+%]*")
+COLOR = re.compile(r"#[0-9a-f]{6}|none")
+_FUNCTION = r"(?:translate|scale|matrix)\([0-9. \-]+\)"
+TRANSFORM = re.compile(_FUNCTION + r"(?: " + _FUNCTION + r")*")
 STYLE = re.compile(r"animation-delay:-[0-9]+(?:\.[0-9]+)?s|mix-blend-mode:soft-light")
 CLASSES = frozenset(
     {"bob", "cast", "foam", "frond", "glint", "ripple", "s", "swash"}
@@ -213,11 +218,20 @@ def _attributes(node, tag, references):
         elif name == "attributeName":
             if value != "baseFrequency":
                 raise ValueError("Unsupported SVG animation target")
-        elif "url(" in value:
+        elif name in ("filter", "clip-path"):
             match = REFERENCE.fullmatch(value)
-            if not match or name not in TARGETS:
-                raise ValueError("Nonlocal or misplaced SVG reference")
+            if not match:
+                raise ValueError("Nonlocal SVG reference")
             references[node].append((match[1], TARGETS[name]))
+        elif name in ("fill", "stroke"):
+            match = REFERENCE.fullmatch(value)
+            if match and name in TARGETS:
+                references[node].append((match[1], TARGETS[name]))
+            elif not COLOR.fullmatch(value):
+                raise ValueError("Unsupported SVG paint")
+        elif name == "transform":
+            if not TRANSFORM.fullmatch(value):
+                raise ValueError("Unsupported SVG transform")
         elif not PLAIN.fullmatch(value):
             raise ValueError("Unsupported SVG attribute value")
 

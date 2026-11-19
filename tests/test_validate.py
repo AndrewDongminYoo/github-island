@@ -95,11 +95,58 @@ class RejectTests(unittest.TestCase):
         )
         self.assertRejects(
             swap('fill="url(#water-top)"', 'fill="url(https://example.com/a)"'),
-            "Nonlocal or misplaced",
+            "Unsupported SVG paint",
         )
         self.assertRejects(
-            before_end('<g opacity="url(#soft)"/>'), "Nonlocal or misplaced"
+            swap('filter="url(#waves)"', 'filter="url(other.svg#waves)"'), "Nonlocal"
         )
+        self.assertRejects(
+            swap('clip-path="url(#seabed-clip)"', 'clip-path="url(a.svg#c)"'),
+            "Nonlocal",
+        )
+
+    def test_function_notation_cannot_pass_as_a_plain_value(self):
+        # CSS function names are case-insensitive, so every letter case must fail,
+        # and a mixed-case local reference must not skip reference resolution.
+        for value in (
+            "URL(other.svg#paint)",
+            "Url(#water-top)",
+            "URL(#missing)",
+            "uRl( #water-top )",
+            "var(--paint)",
+            "image-set(x)",
+        ):
+            with self.subTest(fill=value):
+                self.assertRejects(
+                    swap('fill="url(#water-top)"', f'fill="{value}"'),
+                    "Unsupported SVG paint",
+                )
+        self.assertRejects(
+            before_end('<polyline points="0 0" stroke="url(#water-top)"/>'),
+            "Unsupported SVG paint",
+        )
+        self.assertRejects(before_end('<g fill="currentColor"/>'), "paint")
+        for attribute in ("opacity", "id", "class"):
+            with self.subTest(attribute=attribute):
+                with self.assertRaises(ValueError):
+                    validate_svg(before_end(f'<g {attribute}="URL(#soft)"/>'))
+        self.assertRejects(
+            before_end('<polygon points="URL(a.svg#b)"/>'), "attribute value"
+        )
+        self.assertRejects(
+            before_end('<g filter="URL(#soft)"/>'), "Nonlocal SVG reference"
+        )
+
+    def test_transform_is_a_closed_list_of_functions(self):
+        for value in ("rotate(45)", "URL(a.svg)", "translate(1 2) url(#soft)", "a"):
+            with self.subTest(transform=value):
+                self.assertRejects(
+                    before_end(f'<g transform="{value}"/>'), "Unsupported SVG transform"
+                )
+        accepted = before_end(
+            '<g transform="translate(1 -2) scale(0.5) matrix(1 0 0 1 3 4)"/>'
+        )
+        self.assertIsNone(validate_svg(accepted))
 
     def test_references_must_resolve_to_the_right_kind_of_definition(self):
         self.assertRejects(swap('href="#k"', 'href="#missing"'), "Unresolved")
@@ -140,7 +187,8 @@ class RejectTests(unittest.TestCase):
 
     def test_attribute_values_use_a_plain_alphabet(self):
         self.assertRejects(before_end('<g opacity="javascript:1"/>'), "attribute value")
-        self.assertRejects(before_end('<g transform="a&amp;b"/>'), "attribute value")
+        self.assertRejects(before_end('<g opacity="a&amp;b"/>'), "attribute value")
+        self.assertRejects(before_end('<g opacity="calc(1)"/>'), "attribute value")
         long_value = "1 " * validate.MAX_VALUE
         self.assertRejects(
             before_end(f'<polyline points="{long_value}"/>'), "value budget"
