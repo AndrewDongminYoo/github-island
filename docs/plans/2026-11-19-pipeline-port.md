@@ -1,0 +1,38 @@
+# Port the github-terrarium pipeline
+
+Approved on 2026-11-19.
+This plan brings the collection, growth and publication pipeline of [github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium) to this repository, so that the island grows from real public activity.
+
+## Decisions
+
+- **Copy, do not share.** The pipeline modules are copied into the `github_island` package and renamed. A shared package is the next step only if a third scene appears.
+- **Growth stays, visitors come and go.** Cumulative experience sets the growth stage, which drives the palms and never goes down. Sea animals, visitors, reefs, glints and islets follow the traits of the current window, exactly as github-terrarium computes them.
+- **No text in the image.** The subject and the last complete activity day go into the SVG title, description and data attributes, and into the manifest.
+- **The validator is an allowlist with budgets.** It accepts only known elements and attributes, rejects script and anything that reaches outside the file, checks that references resolve, and enforces byte and element budgets. It does not parse every attribute value against a grammar.
+- **Scoring is unchanged.** Experience, stages, caps and the state schema are version 1 of github-terrarium.
+
+## Steps
+
+Each step is one pull request that passes the tests and `ruff`.
+
+1. **Package and continuous integration.** Move the generator into the `github_island` package as the renderer, seed its random choices from a key, add `pyproject.toml`, the pinned development requirements, the test suite and the CI workflow.
+2. **Collection and growth.** Port `config`, `models`, `github`, `probe`, `normalize`, `growth` and `state` with their tests. Add `render(state)`, which turns a validated state into the traits, the growth and the key that `render_scene` takes.
+3. **Validator and output bundle.** Write the SVG validator for the island vocabulary, and port the bundle step that builds and checks the image, the state and the manifest together.
+4. **Publication and schedule.** Port `publish`, `generate` and `restore`, add the guarded daily workflow, and point the README image at the published output once the `output` branch exists.
+
+The first publication needs a manual workflow run with the bootstrap input.
+That run changes the repository, so it waits for an explicit go-ahead.
+
+## Known gaps to carry forward
+
+- **Reduced motion.** The fish, the canoe and the water shading move with SMIL, which `prefers-reduced-motion` cannot turn off. github-terrarium requires a reduced-motion override for every animation. Moving the swimmers to CSS motion paths would close most of the gap and is not part of this plan.
+- **Calm and active motion.** github-terrarium slows its animation after a week without activity. The island has no such mode yet.
+- **Depth order.** Moving animals and fixed structures are not sorted against each other.
+
+## Verification
+
+```bash
+python -m unittest discover -s tests -v
+ruff check src tests tools
+ruff format --check src tests tools
+```
