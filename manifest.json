@@ -1,0 +1,14 @@
+{
+  "complete_activity_day": "2026-11-18",
+  "manifest_version": 1,
+  "renderer_version": 1,
+  "schema_version": 1,
+  "scoring_version": 1,
+  "sha256": {
+    "island.svg": "50e4a2ca0bf97e5246728312d68198160f369cb9019a143dbd4a8e5bc80e07b1",
+    "state.json": "7f90d9ed3256eac0d55cec85d42e8359b21b4f21e37db0268328cae6e9a419dd"
+  },
+  "source_commit": "a617671bef670b16cc9801ee89461352f6ac8d5e",
+  "stock_observation_day": "2026-11-19",
+  "subject_id": "MDQ6VXNlcjgyOTk5NzE1"
+}
