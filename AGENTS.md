@@ -15,7 +15,8 @@ Draw an isometric island as one animated SVG, and grow it from public GitHub act
 
 ## Boundaries
 
-- The repository has a read-only public collector, local growth reconciliation, a renderer for a growth state, and example scenes. It does not validate the image, bundle it or publish yet; do not claim that it does.
+- The repository has a read-only public collector, local growth reconciliation, a renderer for a growth state, an SVG validator, offline bundle build and validation, and example scenes. It does not publish yet; do not claim that it does.
+- When the renderer starts to write a new element, attribute, class or style, add it to the validator's allowlist in the same change, with a test that the old output is still refused where it should be.
 - Collection, scoring and the state schema are copies of github-terrarium version 1. Treat incomplete collection as failure, never as zero activity, and keep repeated runs from earning duplicate growth.
 - The image must stay one self-contained SVG: no script, no external reference, nothing that needs pointer input.
 - Keep rendering deterministic. The same traits and the same key must give the same bytes, and nothing in the renderer may read the clock, the network or the file system.
