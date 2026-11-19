@@ -14,8 +14,8 @@ def snapshot():
         "observed_on": "2026-11-15",
         "repositories": {"R1": {"stars": 3, "forks": 1}},
         "days": {
-            "2026-11-13": {"prs": 0, "reviews": 0, "issues": 0},
-            "2026-11-14": {"prs": 1, "reviews": 2, "issues": 3},
+            "2026-11-13": {"prs": 0, "reviews": 0, "issues": 0, "outside": 0},
+            "2026-11-14": {"prs": 1, "reviews": 2, "issues": 3, "outside": 0},
         },
     }
 

@@ -72,9 +72,11 @@ def validate_snapshot(snapshot):
         raise ValueError("Invalid completed activity interval")
     fields(snapshot["days"], day_range(start, end))
     for counts in snapshot["days"].values():
-        fields(counts, {"prs", "reviews", "issues"})
+        fields(counts, {"prs", "reviews", "issues", "outside"})
         for value in counts.values():
             count(value)
+        if counts["outside"] > counts["prs"] + counts["issues"]:
+            raise ValueError("Outside contributions exceed pull requests and issues")
     repos = snapshot["repositories"]
     if not isinstance(repos, dict) or len(repos) > 10000:
         raise ValueError("Invalid repository collection")

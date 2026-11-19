@@ -18,7 +18,7 @@ def snapshot(end=date(2026, 11, 15), start=None, prs=0, stars=10, forks=2):
         "observed_on": end.isoformat(),
         "repositories": {"R1": {"stars": stars, "forks": forks}},
         "days": {
-            day: {"prs": prs, "reviews": 0, "issues": 0}
+            day: {"prs": prs, "reviews": 0, "issues": 0, "outside": 0}
             for day in day_range(start, end)
         },
     }
@@ -170,7 +170,14 @@ class GrowthTests(unittest.TestCase):
 
     def test_traits_bounded(self):
         result = traits(
-            {"stars": 500, "forks": 100, "prs": 30, "reviews": 60, "issues": 20}
+            {
+                "stars": 500,
+                "forks": 100,
+                "prs": 30,
+                "reviews": 60,
+                "issues": 20,
+                "outside": 10,
+            }
         )
         self.assertEqual(set(result.values()), {1.0})
         self.assertEqual(set(traits(dict.fromkeys(result, 0)).values()), {0.0})
@@ -197,9 +204,19 @@ class GrowthTests(unittest.TestCase):
     def test_activity_caps_apply_to_day_across_runs(self):
         state = advance(snapshot())
         value = snapshot()
-        value["days"]["2026-11-14"] = {"prs": 4, "reviews": 8, "issues": 4}
+        value["days"]["2026-11-14"] = {
+            "prs": 4,
+            "reviews": 8,
+            "issues": 4,
+            "outside": 0,
+        }
         state = advance(value, state)
-        value["days"]["2026-11-14"] = {"prs": 10, "reviews": 20, "issues": 10}
+        value["days"]["2026-11-14"] = {
+            "prs": 10,
+            "reviews": 20,
+            "issues": 10,
+            "outside": 0,
+        }
         state = advance(value, state)
         self.assertEqual(total(state), 115)
         self.assertEqual(total(advance(value, state)), 115)

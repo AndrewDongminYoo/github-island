@@ -6,9 +6,20 @@ from datetime import timedelta
 
 from .models import count, iso_day, validate_snapshot
 
-ACTIVITY = ("prs", "reviews", "issues")
+# `outside` counts the pull requests and issues of a day that were opened in a
+# public repository the subject does not own. It is a subset of `prs` plus
+# `issues`, earns no experience of its own, and exists to drive a trait.
+ACTIVITY = ("prs", "reviews", "issues", "outside")
 STOCK = ("stars", "forks")
-CAPS = {"stars": 500, "forks": 100, "prs": 30, "reviews": 60, "issues": 20}
+# A contribution to someone else's repository is rare, so its trait saturates early.
+CAPS = {
+    "stars": 500,
+    "forks": 100,
+    "prs": 30,
+    "reviews": 60,
+    "issues": 20,
+    "outside": 10,
+}
 GAP_TOO_LONG = "Gap exceeds 90 days; use explicit recovery batches"
 RECOVERY_UNFINISHED = "Finish explicit recovery before normal updates"
 
@@ -49,6 +60,7 @@ def empty_day():
         "prs": None,
         "reviews": None,
         "issues": None,
+        "outside": None,
         "new_star_units": 0,
         "new_fork_units": 0,
         "activity_xp_awarded": 0,

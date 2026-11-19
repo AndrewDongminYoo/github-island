@@ -703,7 +703,8 @@ def render(state):
         f"{subject['login']}'s GitHub island",
         f"A {growth_stage} island for public GitHub user {subject['id']}. "
         f"Activity complete through {through} UTC. "
-        "Pull requests bring sea animals; reviews bring visitors; issues build reefs; "
+        "Pull requests bring sea animals; reviews and contributions to other "
+        "people's repositories bring visitors; issues build reefs; "
         "stars add glints on the water; forks raise islets.",
         {
             "stage": growth_stage,
@@ -723,9 +724,11 @@ def render(state):
 def render_scene(traits=None, transparent=False, key="example", label=GENERIC_LABEL):
     """Draw the island. `traits` maps each activity signal to a number from 0 to 1.
 
-    Pull requests bring larger sea animals, reviews bring visitors, issues build
-    reefs, stars add glints on the water, and forks raise satellite islets. The
-    vegetation follows `growth`, which defaults to the mean of the first three.
+    Pull requests bring larger sea animals, issues build reefs, stars add glints
+    on the water, and forks raise satellite islets. Visitors follow the larger of
+    `reviews` and `outside`: both are work done for someone else, and either one
+    alone is enough to bring them. The vegetation follows `growth`, which
+    defaults to the mean of pull requests, reviews and issues.
     `key` seeds every random choice, so each key gets its own island and the
     same key always gets the same one.
     """
@@ -733,12 +736,12 @@ def render_scene(traits=None, transparent=False, key="example", label=GENERIC_LA
     growth = traits.get(
         "growth", (traits["prs"] + traits["reviews"] + traits["issues"]) / 3
     )
-    reviews = traits["reviews"]
+    visitors = max(traits["reviews"], traits.get("outside", 0.0))
     rnd = random.Random(f"{key}:scene")
-    homes = HOMES[: steps(reviews, 0.6, 0.75, 0.9)]
-    rings = RINGS[: steps(reviews, 0.15, 0.35, 0.55)]
-    parasols = PARASOLS[: steps(reviews, 0.45, 0.6, 0.8)]
-    canoe = reviews > 0.3
+    homes = HOMES[: steps(visitors, 0.6, 0.75, 0.9)]
+    rings = RINGS[: steps(visitors, 0.15, 0.35, 0.55)]
+    parasols = PARASOLS[: steps(visitors, 0.45, 0.6, 0.8)]
+    canoe = visitors > 0.3
     islets = ISLETS[: round(traits["forks"] * len(ISLETS))]
     palms = 1 + round(growth * 5)
     bodies, shadows = wildlife(traits["prs"], key)
