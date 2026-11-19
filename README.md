@@ -7,9 +7,9 @@ An isometric island, drawn as one animated SVG, that is meant to grow with publi
 ## Status
 
 This is an early prototype.
-The renderer is a Python package that draws the scene from activity numbers passed on the command line.
-Collecting real GitHub activity, keeping growth between runs, and publishing the image every day are not implemented yet.
-[github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium) has that pipeline for a different scene, and [the port plan](docs/plans/2026-11-19-pipeline-port.md) lists the steps that bring it here.
+The package collects public GitHub activity, reconciles it into a growth state, and draws the island for that state, each as a separate command.
+Validating the image, bundling it with its state, and publishing it every day are not implemented yet, so the image above is an example and not anyone's activity.
+The collection and growth code comes from [github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium), and [the port plan](docs/plans/2026-11-19-pipeline-port.md) lists the steps that are left.
 
 ## How it works
 
@@ -76,6 +76,22 @@ python -m github_island scene island.svg --profile 0.65,0.65,0.6,0.6,0.34 --tran
 
 `python tools/examples.py` rewrites the scenes under `examples/`, and a test fails when they no longer match the renderer.
 Open `preview.html` in a browser to see them side by side.
+
+### From real activity
+
+These commands read public data with a token in `GH_TOKEN` and write nothing to GitHub.
+`island.toml` names the account.
+
+```bash
+python -m github_island collect --repository OWNER/REPOSITORY --start START_DAY > snapshot.json
+python -m github_island grow --snapshot snapshot.json --bootstrap > state.json
+python -m github_island draw --state state.json island.svg
+```
+
+A first state needs exactly 30 completed days, so `START_DAY` is 30 days before today in UTC.
+`--repository` names the repository that hosts the island; activity inside it is left out of the counts, so publishing the image never feeds the image.
+The growth stage comes from the experience that the state has accumulated and drives the palms.
+Everything else follows the counts of the last 30 days, on a logarithmic scale that reaches 1 at 30 pull requests, 60 reviews, 20 issues, 500 stars and 100 forks.
 
 ## Development
 

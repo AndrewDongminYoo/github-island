@@ -8,6 +8,10 @@ and the same key always give the same bytes.
 
 import math
 import random
+from xml.sax.saxutils import escape
+
+from .growth import stage, traits
+from .state import validate_state
 
 A = math.cos(math.radians(30))
 B = 0.5
@@ -663,7 +667,60 @@ def parasol(x, y, color):
     return out
 
 
-def render_scene(traits=None, transparent=False, key="example"):
+RENDERER_VERSION = 1
+# The growth stage is permanent, so it drives the palms; everything else follows
+# the traits of the current window.
+STAGE_GROWTH = {
+    "seed": 0.0,
+    "sprout": 0.25,
+    "grove": 0.5,
+    "mature": 0.75,
+    "sanctuary": 1.0,
+}
+GENERIC_LABEL = (
+    "GitHub island",
+    "An isometric cut block of a tropical island in translucent water. "
+    "Sea animals, visitors, reefs and islets appear as GitHub activity grows.",
+    {},
+)
+
+
+def render(state):
+    """Draw the published image for a validated growth state, as UTF-8 bytes.
+
+    The image carries no visible text. The subject, the growth stage and the last
+    complete activity day are in the title, the description and `data-` attributes.
+    """
+    validate_state(state)
+    subject = state["subject"]
+    xp = sum(
+        day["activity_xp_awarded"] + day["popularity_xp_awarded"]
+        for day in state["days"].values()
+    )
+    growth_stage = stage(xp)
+    through = state["last_complete_activity_day"]
+    label = (
+        f"{subject['login']}'s GitHub island",
+        f"A {growth_stage} island for public GitHub user {subject['id']}. "
+        f"Activity complete through {through} UTC. "
+        "Pull requests bring sea animals; reviews bring visitors; issues build reefs; "
+        "stars add glints on the water; forks raise islets.",
+        {
+            "stage": growth_stage,
+            "activity-through": through,
+            "renderer-version": RENDERER_VERSION,
+        },
+    )
+    scene = render_scene(
+        {**traits(state["current_traits"]), "growth": STAGE_GROWTH[growth_stage]},
+        transparent=True,
+        key=f"island-seed-v{subject['seed_version']}:{subject['id']}",
+        label=label,
+    )
+    return scene.encode("utf-8")
+
+
+def render_scene(traits=None, transparent=False, key="example", label=GENERIC_LABEL):
     """Draw the island. `traits` maps each activity signal to a number from 0 to 1.
 
     Pull requests bring larger sea animals, reviews bring visitors, issues build
@@ -698,14 +755,15 @@ def render_scene(traits=None, transparent=False, key="example"):
     add = o.append
     # The transparent variant is cropped to the block, its palms and its shadow.
     view = "200 90 1000 790" if transparent else "0 0 1200 890"
-    add(
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-labelledby="t d">'
+    title, description, data = label
+    extra = "".join(
+        f' data-{name}="{escape(str(value))}"' for name, value in data.items()
     )
-    add('<title id="t">GitHub island</title>')
     add(
-        '<desc id="d">An isometric cut block of a tropical island in translucent water. '
-        "Sea animals, visitors, reefs and islets appear as GitHub activity grows.</desc>"
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-labelledby="t d"{extra}>'
     )
+    add(f'<title id="t">{escape(title)}</title>')
+    add(f'<desc id="d">{escape(description)}</desc>')
     add(f"<style>{CSS}{DARK_CSS if transparent else ''}</style>")
     top_y, bottom_y = CY - H * S, CY + W * S - H * S
     # Shapes that repeat are defined once, at the world origin, and placed with `use`.
