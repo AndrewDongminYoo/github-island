@@ -215,14 +215,68 @@ class RejectTests(unittest.TestCase):
         )
         self.assertRejects(
             before_end('<g><animateMotion dur="1s" repeatCount="3" path="M0 0"/></g>'),
+            "attribute value",
+        )
+        self.assertRejects(
+            before_end('<g><animateMotion dur="1s" path="M0 0"/></g>'),
             "animation repeat",
         )
+
+    def test_animation_never_waits_for_an_event(self):
+        # `begin` and `dur` take clock values only. An event name would make the
+        # animation wait for pointer input that an image never receives.
+        begin = VALID[VALID.index(' begin="') :].split('"')[1]
+        for value in ("click", "mouseover", "0s;click", "k.click", "indefinite", "2s"):
+            with self.subTest(begin=value):
+                self.assertRejects(
+                    swap(f'begin="{begin}"', f'begin="{value}"'), "attribute value"
+                )
+        for value in ("indefinite", "click", "-1s", "media"):
+            with self.subTest(dur=value):
+                motion = (
+                    f'<g><animateMotion dur="{value}" repeatCount="indefinite" '
+                    'path="M0 0"/></g>'
+                )
+                self.assertRejects(before_end(motion), "attribute value")
+
+    def test_keyword_attributes_accept_only_the_renderers_keywords(self):
+        for attribute, value in (
+            ("stroke-linecap", "butt"),
+            ("stroke-linejoin", "miter"),
+            ("opacity", "inherit"),
+            ("stroke-width", "thick"),
+        ):
+            with self.subTest(attribute=attribute):
+                self.assertRejects(
+                    before_end(
+                        f'<path d="M0 0" {attribute}="{value}"/>'.replace(
+                            "<path", "<g><path"
+                        )
+                        + "</g>"
+                    ),
+                    "attribute value",
+                )
+        self.assertRejects(
+            swap('type="fractalNoise"', 'type="other"'), "attribute value"
+        )
+        self.assertRejects(swap('in="n"', 'in="SourceGraphic"'), "attribute value")
+        self.assertRejects(
+            swap('rotate="auto"', 'rotate="auto-reverse"'), "attribute value"
+        )
+        self.assertRejects(
+            before_end('<g><path d="M0 0 url(x)"/></g>'), "attribute value"
+        )
+
+    def test_every_allowed_attribute_has_a_grammar(self):
+        # No generic fallback exists, so a new attribute cannot be allowed
+        # without deciding what its value may look like.
+        names = set().union(*(allowed for allowed, _ in validate.ELEMENTS.values()))
+        self.assertEqual(names - set(validate.GRAMMAR) - validate.BY_NAME, set())
+        self.assertEqual(set(validate.GRAMMAR) & validate.BY_NAME, set())
 
     def test_root_metadata_is_required(self):
         for old, new in (
             ('viewBox="200 90 1000 790"', 'viewBox="0 0 10 10"'),
-            ('role="img"', 'role="presentation"'),
-            ('aria-labelledby="t d"', 'aria-labelledby="t"'),
             (
                 f'data-renderer-version="{validate.RENDERER_VERSION}"',
                 'data-renderer-version="99"',
@@ -230,10 +284,27 @@ class RejectTests(unittest.TestCase):
         ):
             with self.subTest(change=new):
                 self.assertRejects(swap(old, new), "root metadata or viewBox")
-        self.assertRejects(swap('data-stage="', 'data-stage="x'), "stage metadata")
+        for removed in (
+            ' role="img"',
+            ' aria-labelledby="t d"',
+            ' viewBox="200 90 1000 790"',
+        ):
+            with self.subTest(removed=removed):
+                self.assertRejects(swap(removed, ""), "root metadata or viewBox")
+        # A wrong keyword fails the attribute's own grammar first.
+        self.assertRejects(swap('role="img"', 'role="presentation"'), "attribute value")
         self.assertRejects(
-            swap('data-activity-through="', 'data-activity-through="x'), "date"
+            swap('aria-labelledby="t d"', 'aria-labelledby="t"'), "attribute value"
         )
+        self.assertRejects(swap('data-stage="', 'data-stage="x'), "stage metadata")
+        day = VALID[VALID.index('data-activity-through="') :].split('"')[1]
+        self.assertRejects(
+            swap(
+                f'data-activity-through="{day}"', 'data-activity-through="2026-13-40"'
+            ),
+            "activity date",
+        )
+        self.assertRejects(swap(f' data-activity-through="{day}"', ""), "activity date")
 
     def test_title_and_description_are_required(self):
         title = VALID[VALID.index("<title") : VALID.index("</title>") + 8]

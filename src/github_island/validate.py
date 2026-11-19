@@ -2,9 +2,11 @@
 
 The gate accepts only the elements, attributes, classes and stylesheet that the
 renderer writes, rejects script and anything that reaches outside the file, and
-checks that every reference resolves inside the file and within budgets. It does
-not parse geometry: a path or a number is checked for its shape of characters,
-not for its meaning. It never opens files, URLs or sockets.
+checks that every reference resolves inside the file and within budgets. Every
+attribute has a grammar of its own; there is no generic fallback, because a
+fallback that accepts letters also accepts a keyword such as `click`. It does
+not parse geometry: a path is checked for its alphabet and a number for its
+shape, not for what they draw. It never opens files, URLs or sockets.
 """
 
 import re
@@ -24,14 +26,72 @@ MAX_VALUE = 8192
 VIEW_BOX = "200 90 1000 790"
 IDENTIFIER = r"[A-Za-z_][A-Za-z0-9_-]*"
 REFERENCE = re.compile(r"url\(#(" + IDENTIFIER + r")\)")
-# Geometry, colors and keywords: digits, signs, separators, letters and "#".
-# The alphabet has no parenthesis, so no function notation (url, var, image-set,
-# in any letter case) can pass as a plain value. The attributes that do take a
-# function have their own closed grammar below.
-PLAIN = re.compile(r"[A-Za-z0-9#.,; \-+%]*")
 COLOR = re.compile(r"#[0-9a-f]{6}|none")
 _FUNCTION = r"(?:translate|scale|matrix)\([0-9. \-]+\)"
 TRANSFORM = re.compile(_FUNCTION + r"(?: " + _FUNCTION + r")*")
+_NUMBER = r"-?[0-9]+(?:\.[0-9]+)?"
+_TIME = r"[0-9]+(?:\.[0-9]+)?s"
+_SHAPES = {
+    "number": _NUMBER + "%?",
+    "numbers": _NUMBER + r"(?:[ ,;]+" + _NUMBER + r")*",
+    "path": r"[MLHVCSQTAZmlhvcsqtaz0-9 .,\-]+",
+    "hex": r"#[0-9a-f]{6}",
+}
+_BY_SHAPE = {
+    "number": (
+        "azimuth cx cy diffuseConstant elevation fill-opacity height k1 k2 k3 k4 "
+        "numOctaves offset opacity r rx ry seed specularConstant specularExponent "
+        "stdDeviation stroke-width surfaceScale width x x1 x2 y y1 y2"
+    ),
+    "numbers": "baseFrequency points stroke-dasharray values viewBox",
+    "path": "d path",
+    "hex": "color lighting-color stop-color",
+}
+# attribute: the only form its value may take. Attributes with a reference, a
+# class list, a style or a transform are handled by name in `_attributes`.
+GRAMMAR = {
+    name: re.compile(_SHAPES[shape])
+    for shape, names in _BY_SHAPE.items()
+    for name in names.split()
+} | {
+    name: re.compile(pattern)
+    for name, pattern in {
+        "aria-labelledby": "t d",
+        # A negative clock offset: never an event such as `click`.
+        "begin": "-" + _TIME,
+        "color-interpolation-filters": "sRGB",
+        "data-activity-through": r"[0-9]{4}-[0-9]{2}-[0-9]{2}",
+        "data-renderer-version": "[0-9]+",
+        "data-stage": "[a-z]+",
+        "dur": _TIME,
+        "gradientUnits": "userSpaceOnUse",
+        "in": "[dn]",
+        "in2": "s",
+        "operator": "arithmetic",
+        "repeatCount": "indefinite",
+        "result": "[dns]",
+        "role": "img",
+        "rotate": "auto",
+        "stroke-linecap": "round",
+        "stroke-linejoin": "round",
+        "type": "fractalNoise|turbulence",
+    }.items()
+}
+# Attributes that `_attributes` checks by name instead of through GRAMMAR.
+BY_NAME = frozenset(
+    {
+        "attributeName",
+        "class",
+        "clip-path",
+        "fill",
+        "filter",
+        "href",
+        "id",
+        "stroke",
+        "style",
+        "transform",
+    }
+)
 STYLE = re.compile(r"animation-delay:-[0-9]+(?:\.[0-9]+)?s|mix-blend-mode:soft-light")
 CLASSES = frozenset(
     {"bob", "cast", "foam", "frond", "glint", "ripple", "s", "swash"}
@@ -232,7 +292,7 @@ def _attributes(node, tag, references):
         elif name == "transform":
             if not TRANSFORM.fullmatch(value):
                 raise ValueError("Unsupported SVG transform")
-        elif not PLAIN.fullmatch(value):
+        elif not GRAMMAR[name].fullmatch(value):
             raise ValueError("Unsupported SVG attribute value")
 
 
