@@ -151,8 +151,13 @@
           <small class="check">The stage comes from experience earned over time. It never goes down, and it sets the palms.</small>
         </section>
         <section>
-          <h2>Last 30 days</h2>
+          <h2>Activity in the last 30 days</h2>
           <div id="signals"></div>
+        </section>
+        <section>
+          <h2>Totals over public repositories</h2>
+          <div id="totals"></div>
+          <small class="check">Stars and forks are the current totals over the account's own public repositories that are not forks.</small>
         </section>
         <section>
           <h2>Island</h2>
@@ -172,19 +177,21 @@
       </form>
     </main>
     <footer>
-      Signal values run from 0 to 1 on a logarithmic scale. The count next to each slider is the
-      30-day total that gives that value. Rendering happens in your browser; nothing is sent
-      anywhere.
+      Each slider sets a signal from 0 to 1 on a logarithmic scale. The number next to it is the
+      count that gives that value: a total over the last 30 days for activity, and the current
+      total for stars and forks. A signal stops growing at its cap, shown as "or more". Rendering
+      happens in your browser; nothing is sent anywhere.
     </footer>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js"></script>
     <script>
       const SIGNALS = [
-        ["prs", "Pull requests", "Sea animals: fish, then turtles, rays, dolphins, a whale shark"],
-        ["reviews", "Reviews", "Visitors: float rings, a canoe, parasols, bungalows"],
-        ["outside", "Outside contributions", "Visitors too. The larger of this and reviews counts"],
-        ["issues", "Issues", "Reefs on the seabed"],
-        ["stars", "Stars", "Glints on the water"],
-        ["forks", "Forks", "Satellite islets"],
+        // [name, label, unit (one, many), group, hint]
+        ["prs", "Pull requests", ["pull request", "pull requests"], "signals", "Sea animals: fish, then turtles, rays, dolphins, a whale shark"],
+        ["reviews", "Reviews", ["review", "reviews"], "signals", "Visitors: float rings, a canoe, parasols, bungalows"],
+        ["outside", "Outside contributions", ["PR or issue", "PRs and issues"], "signals", "Opened in repositories you do not own. Visitors too: the larger of this and reviews counts"],
+        ["issues", "Issues", ["issue", "issues"], "signals", "Reefs on the seabed"],
+        ["stars", "Stars", ["star", "stars"], "totals", "Glints on the water"],
+        ["forks", "Forks", ["fork", "forks"], "totals", "Satellite islets"],
       ];
       const PRESETS = {
         Quiet: { stage: "seed", prs: 0.1, reviews: 0, outside: 0, issues: 0.2, stars: 0.2, forks: 0 },
@@ -227,6 +234,13 @@
         return Math.round(Math.expm1(value * Math.log1p(caps[name])));
       }
 
+      function describe(name, unit, value) {
+        const count = countFor(name, value);
+        const words = count === 1 ? unit[0] : unit[1];
+        const amount = value >= 1 ? `${count} or more ${words}` : `≈ ${count} ${words}`;
+        return `${amount} · ${value.toFixed(2)}`;
+      }
+
       function buildControls() {
         for (const name of Object.keys(PRESETS)) {
           const button = document.createElement("button");
@@ -251,14 +265,14 @@
           });
           $("stages").append(button);
         }
-        for (const [name, label, hint] of SIGNALS) {
+        for (const [name, label, , group, hint] of SIGNALS) {
           const box = document.createElement("div");
           box.className = "signal";
           box.innerHTML =
             `<div class="head"><label for="s-${name}">${label}</label><output id="o-${name}" for="s-${name}"></output></div>` +
             `<input type="range" id="s-${name}" min="0" max="1" step="0.01" />` +
             `<small>${hint}</small>`;
-          $("signals").append(box);
+          $(group).append(box);
           box.querySelector("input").addEventListener("input", (event) => {
             state[name] = Number(event.target.value);
             syncControls();
@@ -295,9 +309,9 @@
         for (const button of $("stages").children) {
           button.setAttribute("aria-pressed", String(button.dataset.stage === state.stage));
         }
-        for (const [name] of SIGNALS) {
+        for (const [name, , unit] of SIGNALS) {
           $("s-" + name).value = state[name];
-          $("o-" + name).textContent = `${state[name].toFixed(2)} · ≈ ${countFor(name, state[name])}`;
+          $("o-" + name).textContent = describe(name, unit, state[name]);
         }
         if ($("key").value !== state.key) $("key").value = state.key;
         $("poster").checked = state.poster;

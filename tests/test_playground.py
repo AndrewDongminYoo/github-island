@@ -61,7 +61,7 @@ class PageTests(unittest.TestCase):
 
     def test_signals_and_stages_on_the_page_exist_in_the_renderer(self):
         block = PAGE[PAGE.index("const SIGNALS") : PAGE.index("const PRESETS")]
-        signals = re.findall(r'\["(\w+)", "', block)
+        signals = re.findall(r'^\s+\["(\w+)", "', block, re.MULTILINE)
         self.assertEqual(len(signals), 6)
         self.assertEqual(set(signals) - set(CAPS), set())
         presets = PAGE[PAGE.index("const PRESETS") : PAGE.index("const BUDGET")]
