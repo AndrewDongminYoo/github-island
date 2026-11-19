@@ -7,9 +7,9 @@ An isometric island, drawn as one animated SVG, that is meant to grow with publi
 ## Status
 
 This is an early prototype.
-The generator draws the scene from activity numbers passed on the command line.
+The renderer is a Python package that draws the scene from activity numbers passed on the command line.
 Collecting real GitHub activity, keeping growth between runs, and publishing the image every day are not implemented yet.
-[github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium) has that pipeline for a different scene, and this project is meant to reuse its approach.
+[github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium) has that pipeline for a different scene, and [the port plan](docs/plans/2026-11-19-pipeline-port.md) lists the steps that bring it here.
 
 ## How it works
 
@@ -59,20 +59,33 @@ The number and height of the palms follow overall growth, which the prototype ta
 
 ## Usage
 
-The generator needs Python 3 and only the standard library.
+The package needs Python 3.12 or later and has no runtime dependencies.
 
 ```bash
-python3 generate.py OUTPUT.svg [PROFILE] [transparent]
+python -m pip install -e .
+python -m github_island scene OUTPUT.svg [--profile PROFILE] [--transparent] [--key KEY]
 ```
 
-- `PROFILE` is five comma-separated numbers from 0 to 1 in the order pull requests, reviews, issues, stars, forks.
-- `transparent` removes the backdrop and the title text and crops the view to the block.
+- `--profile` is five comma-separated numbers from 0 to 1 in the order pull requests, reviews, issues, stars, forks.
+- `--transparent` removes the backdrop and the title text and crops the view to the block.
+- `--key` seeds the random choices, so each key gets its own island and the same key always gets the same one.
 
 ```bash
-python3 generate.py examples/island.svg 0.65,0.65,0.6,0.6,0.34 transparent
+python -m github_island scene island.svg --profile 0.65,0.65,0.6,0.6,0.34 --transparent
 ```
 
-Open `preview.html` in a browser to see the example profiles side by side.
+`python tools/examples.py` rewrites the scenes under `examples/`, and a test fails when they no longer match the renderer.
+Open `preview.html` in a browser to see them side by side.
+
+## Development
+
+```bash
+python -m pip install --require-hashes -r requirements-dev.txt
+python -m pip install -e .
+python -m unittest discover -s tests -v
+ruff check src tests tools
+ruff format --check src tests tools
+```
 
 ## Known limits
 

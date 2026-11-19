@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools==84.2.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "github-island"
+version = "0.1.0"
+description = "An isometric SVG island grown from public GitHub activity"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+
+[project.scripts]
+github-island = "github_island.__main__:main"
+
+[tool.setuptools]
+packages = ["github_island"]
+
+[tool.setuptools.package-dir]
+github_island = "src/github_island"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# The renderer holds SVG fragments as string literals; wrapping them would
+# split markup in the middle of an element.
+"src/github_island/render.py" = ["E501"]
