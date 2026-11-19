@@ -36,3 +36,12 @@ python -m unittest discover -s tests -v
 ruff check src tests tools
 ruff format --check src tests tools
 ```
+
+## Reconciliation, 2026-11-19
+
+The validator decision above says that it does not parse every attribute value against a grammar.
+The shipped validator in `src/github_island/validate.py` is stricter, and it is the authority.
+Review of the pull request for step 3 found two values that a generic fallback let through: a URL function written in capitals, and `begin="click"` on an animation.
+Both passed because the fallback accepted any letters.
+The fallback is removed, and every allowed attribute has a grammar of its own, checked by `tests/test_validate.py`.
+The validator still does not parse geometry: a path is checked for its alphabet, not for the shape it draws.

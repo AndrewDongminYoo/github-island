@@ -7,8 +7,8 @@ An isometric island, drawn as one animated SVG, that is meant to grow with publi
 ## Status
 
 This is an early prototype.
-The package collects public GitHub activity, reconciles it into a growth state, and draws the island for that state, each as a separate command.
-Validating the image, bundling it with its state, and publishing it every day are not implemented yet, so the image above is an example and not anyone's activity.
+The package collects public GitHub activity, reconciles it into a growth state, draws the island for that state, and builds a validated bundle of the image, the state and a manifest, each as a separate command.
+Publishing the bundle every day is not implemented yet, so the image above is an example and not anyone's activity.
 The collection and growth code comes from [github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium), and [the port plan](docs/plans/2026-11-19-pipeline-port.md) lists the steps that are left.
 
 ## How it works
@@ -87,6 +87,18 @@ python -m github_island collect --repository OWNER/REPOSITORY --start START_DAY 
 python -m github_island grow --snapshot snapshot.json --bootstrap > state.json
 python -m github_island draw --state state.json island.svg
 ```
+
+`build` does the last two steps together and writes `island.svg`, `state.json` and `manifest.json` into one directory, and `validate` checks such a directory.
+
+```bash
+python -m github_island build --snapshot snapshot.json --bootstrap --bundle-dir bundle --source-commit "$(git rev-parse HEAD)"
+python -m github_island validate --bundle-dir bundle
+```
+
+The validator is an allowlist with budgets.
+It accepts only the elements, attributes, classes and stylesheet that the renderer writes, refuses script and anything that reaches outside the file, checks that every reference resolves inside the file, and bounds the size, the element count, the depth and the animation count.
+Every attribute has a grammar of its own, so a keyword such as `click` on an animation or a function such as `URL(...)` on a paint cannot pass.
+It does not parse geometry, so it cannot tell whether a path draws the right shape.
 
 A first state needs exactly 30 completed days, so `START_DAY` is 30 days before today in UTC.
 `--repository` names the repository that hosts the island; activity inside it is left out of the counts, so publishing the image never feeds the image.
