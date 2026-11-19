@@ -38,8 +38,25 @@ def P3(points):
     return [P(*p) for p in points]
 
 
+def num(value):
+    """Format a coordinate to one decimal place without a trailing `.0`."""
+    text = f"{value:.1f}"
+    return text[:-2] if text.endswith(".0") else text
+
+
+def offset(x, y, z=0.0):
+    """Screen offset of a world displacement. The projection is translation-invariant,
+    so a shape drawn once can be reused anywhere with a plain translate."""
+    return ((x - y) * A * S, (x + y) * B * S - z * S)
+
+
+def place(x, y):
+    dx, dy = offset(x, y)
+    return f"translate({num(dx)} {num(dy)})"
+
+
 def fmt(points):
-    return " ".join(f"{x:.1f},{y:.1f}" for x, y in points)
+    return " ".join(f"{num(x)},{num(y)}" for x, y in points)
 
 
 def attrs(kw):
@@ -53,13 +70,14 @@ def poly(points, **kw):
 
 
 def solid(points, fill):
-    # A hairline stroke in the fill color hides seams between adjacent faces.
-    return poly(points, fill=fill, stroke=fill, stroke_width="0.7", stroke_linejoin="round")
+    # The "s" class fills with `color` and adds a hairline stroke in the same color,
+    # which hides seams between adjacent faces at the cost of one attribute.
+    return f'<polygon class="s" color="{fill}" points="{fmt(points)}"/>'
 
 
 def line(a, b, **kw):
     return (
-        f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}"'
+        f'<line x1="{num(a[0])}" y1="{num(a[1])}" x2="{num(b[0])}" y2="{num(b[1])}"'
         f"{attrs(kw)}/>"
     )
 
@@ -216,7 +234,7 @@ def island_radius(theta, z, radius=None, top=None):
     return radius * (1 - 0.7 * (z / top) ** 1.6) * wobble
 
 
-def island_ring(z, scale=1.0, n=72, center=None, radius=None, top=None):
+def island_ring(z, scale=1.0, n=48, center=None, radius=None, top=None):
     cx, cy = ISLAND if center is None else center
     return [
         (
@@ -247,8 +265,52 @@ def ribbon(points, widths):
     return left, right
 
 
+CROWN_FRONDS = 12
+
+
+def crown_defs(variant):
+    """Define one palm crown around the origin, frond by frond in paint order.
+
+    Every palm reuses these fronds, so a scene pays for the frond geometry once.
+    """
+    rnd = random.Random(40 + variant)
+    fronds = []
+    for k in range(CROWN_FRONDS):
+        theta = 2 * math.pi * k / CROWN_FRONDS + rnd.uniform(-0.2, 0.2)
+        fronds.append((math.cos(theta) + math.sin(theta), theta, k))
+    fronds.sort()
+    out = []
+    for order, (depth, theta, k) in enumerate(fronds):
+        reach = rnd.uniform(1.45, 1.95)
+        rise = rnd.uniform(0.9, 1.4)
+        droop = rise + rnd.uniform(0.6, 1.0)
+        mid = [
+            offset(
+                math.cos(theta) * reach * i / 12,
+                math.sin(theta) * reach * i / 12,
+                rise * i / 12 - droop * (i / 12) ** 2,
+            )
+            for i in range(13)
+        ]
+        widths = [9.5 * 2.3 * (i / 12) ** 0.5 * (1 - i / 12) ** 0.7 for i in range(13)]
+        left, right = ribbon(mid, widths)
+        base = "#2a8348" if depth < -0.3 else ("#3f9f55" if k % 2 else "#57b866")
+        cuts = "".join(
+            f"M{num(left[i][0])} {num(left[i][1])}L{num(mid[i - 1][0])} {num(mid[i - 1][1])}"
+            f"L{num(right[i][0])} {num(right[i][1])}"
+            for i in range(2, 12)
+        )
+        out.append(
+            f'<g id="c{variant}f{order}">'
+            + solid(left + right[::-1], base)
+            + f'<path d="{cuts}" fill="none" stroke="{shade(base, 0.68)}" stroke-width="0.8" opacity="0.6"/>'
+            + f'<polyline points="{fmt(mid)}" fill="none" stroke="{shade(base, 1.3)}" stroke-width="1"/>'
+            + "</g>"
+        )
+    return "".join(out)
+
+
 def palm(bx, by, height, lean, seed, bz=None, size=1.0):
-    rnd = random.Random(seed)
     if bz is None:
         bz = island_height(bx - ISLAND[0], by - ISLAND[1])
     out = []
@@ -261,46 +323,19 @@ def palm(bx, by, height, lean, seed, bz=None, size=1.0):
     out.append(solid(left + right[::-1], "#b08d63"))
     for i in range(1, 10):
         out.append(line(left[i], right[i], stroke="#8a6b47", stroke_width="1", opacity="0.7"))
-    crown = (bx + lean[0], by + lean[1], bz + height)
-    sx, sy = P(*crown)
-    fronds = []
-    count = 12
-    for k in range(count):
-        theta = 2 * math.pi * k / count + rnd.uniform(-0.2, 0.2)
-        fronds.append((math.cos(theta) + math.sin(theta), theta, k))
-    fronds.sort()
-    for depth, theta, k in fronds:
-        reach = rnd.uniform(1.45, 1.95) * (0.75 + height / 12) * size
-        rise = rnd.uniform(0.9, 1.4)
-        droop = rise + rnd.uniform(0.6, 1.0)
-        mid = []
-        for i in range(13):
-            u = i / 12
-            mid.append(
-                P(
-                    crown[0] + math.cos(theta) * reach * u,
-                    crown[1] + math.sin(theta) * reach * u,
-                    crown[2] + rise * u - droop * u * u,
-                )
-            )
-        widths = [9.5 * 2.3 * size * (i / 12) ** 0.5 * (1 - i / 12) ** 0.7 for i in range(13)]
-        left, right = ribbon(mid, widths)
-        base = "#2a8348" if depth < -0.3 else ("#3f9f55" if k % 2 else "#57b866")
-        cuts = "".join(
-            f"M{left[i][0]:.1f} {left[i][1]:.1f}L{mid[i - 1][0]:.1f} {mid[i - 1][1]:.1f}"
-            f"L{right[i][0]:.1f} {right[i][1]:.1f}"
-            for i in range(2, 12)
-        )
-        out.append(
-            f'<g class="frond" style="transform-origin:{sx:.1f}px {sy:.1f}px;'
-            f'animation-delay:-{rnd.uniform(0, 6):.2f}s">'
-            + solid(left + right[::-1], base)
-            + f'<path d="{cuts}" fill="none" stroke="{shade(base, 0.68)}" stroke-width="0.8" opacity="0.6"/>'
-            + f'<polyline points="{fmt(mid)}" fill="none" stroke="{shade(base, 1.3)}" stroke-width="1"/>'
-            + "</g>"
-        )
-    for dx, dy in ((-3, 3), (3, 4), (0, 6)):
-        out.append(f'<circle cx="{sx + dx:.1f}" cy="{sy + dy:.1f}" r="3.2" fill="#5b4027"/>')
+    sx, sy = P(bx + lean[0], by + lean[1], bz + height)
+    # The crown is one of two shared shapes, mirrored for half of the palms and
+    # scaled with the trunk. Each frond sways about the crown, the group's origin.
+    scale = size * (0.75 + height / 12)
+    variant, mirror = seed % 2, -1 if seed % 4 > 1 else 1
+    fronds = "".join(
+        f'<g class="frond d{(order * 3 + seed) % 8}"><use href="#c{variant}f{order}"/></g>'
+        for order in range(CROWN_FRONDS)
+    )
+    out.append(
+        f'<g transform="translate({num(sx)} {num(sy)}) scale({mirror * scale:.2f} {scale:.2f})">'
+        f'{fronds}<use href="#nuts"/></g>'
+    )
     return out
 
 
@@ -327,7 +362,8 @@ def ellipse_path(cx, cy, rx, ry, clockwise=True):
 
 
 CSS = """
-.frond { animation: sway 6s ease-in-out infinite alternate; }
+.s { fill: currentColor; stroke: currentColor; stroke-width: 0.7px; stroke-linejoin: round; }
+.frond { transform-origin: 0 0; animation: sway 6s ease-in-out infinite alternate; }
 .ripple { transform-box: fill-box; transform-origin: center; animation: ripple 5s ease-out infinite; }
 .glint { transform-box: fill-box; transform-origin: center; animation: glint 3.2s ease-in-out infinite; }
 .bob { animation: bob 4s ease-in-out infinite alternate; }
@@ -350,6 +386,14 @@ CSS = """
 }
 @keyframes bob { from { transform: translate(-4px, 2px); } to { transform: translate(5px, -3px); } }
 @keyframes foam { from { opacity: 0.55; } to { opacity: 0.95; } }
+/* Delay classes come after every `animation` shorthand, which would reset the delay. */
+.d1 { animation-delay: -0.7s; }
+.d2 { animation-delay: -1.4s; }
+.d3 { animation-delay: -2.1s; }
+.d4 { animation-delay: -2.8s; }
+.d5 { animation-delay: -3.5s; }
+.d6 { animation-delay: -4.2s; }
+.d7 { animation-delay: -4.9s; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 """.strip()
 
@@ -541,6 +585,25 @@ def build(traits=None, transparent=False):
     )
     add(f"<style>{CSS}{DARK_CSS if transparent else ''}</style>")
     top_y, bottom_y = CY - H * S, CY + W * S - H * S
+    # Shapes that repeat are defined once, at the world origin, and placed with `use`.
+    shared = (
+        crown_defs(0)
+        + crown_defs(1)
+        + '<g id="nuts" fill="#5b4027"><circle cx="-3" cy="3" r="3.2"/><circle cx="3" cy="4" r="3.2"/>'
+        '<circle cy="6" r="3.2"/></g>'
+        f'<path id="k" d="{SPARK}" fill="#ffffff"/>'
+    )
+    if homes:
+        walk = (
+            post(0.1, JETTY_Y + 0.05, H, DECK - 0.1)
+            + post(0.1, JETTY_Y + 0.45, H, DECK - 0.1)
+            + deck(0, JETTY_Y, JETTY_SEGMENT, JETTY_Y + 0.5, along_x=False)
+        )
+        shared += (
+            '<g id="post">' + "".join(post(0, 0, 0, H)) + "</g>"
+            '<g id="home">' + "".join(bungalow(0, 0)) + "</g>"
+            '<g id="walk">' + "".join(walk) + "</g>"
+        )
     add(
         "<defs>"
         '<radialGradient id="bg" cx="0.5" cy="0.45" r="0.75">'
@@ -569,7 +632,8 @@ def build(traits=None, transparent=False):
         '<feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="9"/>'
         '<feColorMatrix values="0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0 0.1  0 0 0 0.9 -0.35"/></filter>'
         f'<clipPath id="seabed-clip"><rect width="{W * LOCAL:.0f}" height="{W * LOCAL:.0f}"/></clipPath>'
-        "</defs>"
+        + shared
+        + "</defs>"
     )
     if not transparent:
         add('<rect width="1200" height="890" fill="url(#bg)"/>')
@@ -598,12 +662,15 @@ def build(traits=None, transparent=False):
             add(solid(upper + lower, shade(color, factor)))
         wet = [P(*edge(u), 0) for u in us] + [P(*edge(u), -0.1) for u in reversed(us)]
         add(poly(wet, fill="#5fc9bf", opacity="0.75"))
+    pebbles = {"#fff8ea": [], "#6d5038": []}
     for _ in range(90):
         u, z = rnd.uniform(0.1, 2 * W - 0.1), rnd.uniform(-3.1, -1.3)
         x, y = P(*edge(u), z)
         r = rnd.uniform(1.3, 3.2)
         fill = "#fff8ea" if rnd.random() < 0.75 else "#6d5038"
-        add(f'<ellipse cx="{x:.1f}" cy="{y:.1f}" rx="{r:.1f}" ry="{r * 0.7:.1f}" fill="{fill}" opacity="0.85"/>')
+        pebbles[fill].append(f'<ellipse cx="{num(x)}" cy="{num(y)}" rx="{num(r)}" ry="{num(r * 0.7)}"/>')
+    for fill, marks in pebbles.items():
+        add(f'<g fill="{fill}" opacity="0.85">' + "".join(marks) + "</g>")
     for matrix in (face_y(), face_x()):
         add(
             f'<g transform="{matrix}"><rect width="{W * LOCAL:.0f}" height="{DEPTH * LOCAL:.0f}" '
@@ -664,7 +731,7 @@ def build(traits=None, transparent=False):
         add(solid(P3(island_ring(z)), mix("#e2d3a4", "#f7ebcb", z / H)))
     for center in islets:
         for z in (0.0, 0.3, 0.6, 0.9, 1.15):
-            ring = island_ring(z, center=center, radius=ISLET_R, top=ISLET_TOP)
+            ring = island_ring(z, n=24, center=center, radius=ISLET_R, top=ISLET_TOP)
             add(solid(P3(ring), mix("#e2d3a4", "#f7ebcb", z / H)))
 
     # Full-height posts, seen through the water below the surface.
@@ -676,7 +743,7 @@ def build(traits=None, transparent=False):
         posts += [(x0 + 0.1, JETTY_Y + 0.05), (x0 + 0.1, JETTY_Y + 0.45)]
     posts.sort(key=lambda p: p[0] + p[1])
     for px, py in posts:
-        add("".join(post(px, py, 0, H)))
+        add(f'<use href="#post" transform="{place(px, py)}"/>')
 
     # Sea animals swim in a plane below the surface.
     add(f'<g transform="{ground(0.5)}">' + "".join(bodies) + "</g>")
@@ -709,7 +776,7 @@ def build(traits=None, transparent=False):
         )
     add(f'<path class="foam" d="{shore}" fill="none" stroke="#ffffff" stroke-width="9" stroke-linejoin="round"/>')
     for center in islets:
-        ring = island_ring(H, 1.08, center=center, radius=ISLET_R, top=ISLET_TOP)
+        ring = island_ring(H, 1.08, n=24, center=center, radius=ISLET_R, top=ISLET_TOP)
         d = "M" + "L".join(f"{x * LOCAL:.0f} {y * LOCAL:.0f}" for x, y, _ in ring) + "Z"
         add(f'<path class="foam" d="{d}" fill="none" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"/>')
     add('<g filter="url(#soft-local)" fill="#0c5558" opacity="0.3">')
@@ -748,15 +815,15 @@ def build(traits=None, transparent=False):
             )
         )
     add("</g>")
-    for _ in range(round(4 + traits["stars"] * 20)):
+    for index in range(round(4 + traits["stars"] * 20)):
         while True:
             x, y = rnd.uniform(0.4, W - 0.4), rnd.uniform(0.4, W - 0.4)
             if math.hypot(x - ISLAND[0], y - ISLAND[1]) > ISLAND_R * 0.93:
                 break
         sx, sy = P(x, y, H)
         add(
-            f'<g transform="translate({sx:.1f} {sy:.1f})"><path class="glint" d="{SPARK}" fill="#ffffff" '
-            f'style="animation-delay:-{rnd.uniform(0, 3.2):.2f}s"/></g>'
+            f'<g transform="translate({num(sx)} {num(sy)})">'
+            f'<use href="#k" class="glint d{index * 5 % 8}"/></g>'
         )
 
     # Island above the waterline.
@@ -774,7 +841,7 @@ def build(traits=None, transparent=False):
         parts = []
         for k in range(5):
             z = H + (ISLET_TOP - H) * k / 4
-            ring = island_ring(z, center=center, radius=ISLET_R, top=ISLET_TOP)
+            ring = island_ring(z, n=24, center=center, radius=ISLET_R, top=ISLET_TOP)
             parts.append(solid(P3(ring), mix("#f6e9c8", "#fff7e2", k / 4)))
         parts += palm(center[0], center[1], 1.3, (0.3, -0.2), 300 + i, bz=ISLET_TOP, size=0.55)
         items.append((center[0] + center[1], parts))
@@ -785,11 +852,9 @@ def build(traits=None, transparent=False):
         x, y = ISLAND[0] + dx, ISLAND[1] + dy
         items.append((x + y + 0.3, parasol(x, y, color)))
     for xc, yc in homes:
-        items.append((xc + yc + 0.25, bungalow(xc, yc)))
+        items.append((xc + yc + 0.25, [f'<use href="#home" transform="{place(xc, yc)}"/>']))
     for x0, x1 in jetty:
-        part = post(x0 + 0.1, JETTY_Y + 0.05, H, DECK - 0.1) + post(x0 + 0.1, JETTY_Y + 0.45, H, DECK - 0.1)
-        walk = deck(x0, JETTY_Y, x1, JETTY_Y + 0.5, along_x=False)
-        items.append(((x0 + x1) / 2 + JETTY_Y + 0.25, part + walk))
+        items.append(((x0 + x1) / 2 + JETTY_Y + 0.25, [f'<use href="#walk" transform="{place(x0, 0)}"/>']))
     # The third bungalow sits in front of the jetty and needs a short walkway to it.
     for xc, yc in homes[2:]:
         items.append((xc + JETTY_Y + 0.9, deck(xc - 0.25, JETTY_Y + 0.5, xc + 0.25, yc - 0.75)))
