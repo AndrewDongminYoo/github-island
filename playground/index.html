@@ -37,6 +37,8 @@
         }
       }
       * { box-sizing: border-box; }
+      /* A display rule on an element would otherwise override its `hidden` attribute. */
+      [hidden] { display: none !important; }
       body {
         margin: 0;
         background: var(--page);
@@ -343,7 +345,13 @@
         readHash();
         const pyodide = await loadPyodide();
         $("status").textContent = "Loading the renderer…";
-        const modules = await (await fetch("py/modules.json")).json();
+        const list = await fetch("py/modules.json");
+        if (!list.ok) {
+          throw new Error(
+            "this site has no renderer files (py/modules.json). Build it with tools/playground.py; serving the playground folder as it is does not work."
+          );
+        }
+        const modules = await list.json();
         pyodide.FS.mkdirTree("/app/github_island");
         for (const name of modules) {
           const response = await fetch(`py/github_island/${name}.py`);
