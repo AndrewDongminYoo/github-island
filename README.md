@@ -18,6 +18,7 @@ Collecting real GitHub activity, keeping growth between runs, and publishing the
 - CSS keyframes move the palm fronds, the ripples, the glints and the small waves on the beach.
 - SMIL moves the sea animals and the canoe along paths that lie in a plane below or on the water surface.
 - The water shading is filter lighting on a noise height map, blended over the scene.
+- Shapes that repeat are defined once and placed with `use`: the fronds of two palm crowns, the bungalow, a jetty segment, a post and a glint. The projection is isometric, so a copy only needs a translation.
 - The transparent variant carries no text and no backdrop, so it sits on light and dark pages alike; only the shadow under the block follows `prefers-color-scheme`.
 
 ## Activity mapping
@@ -76,11 +77,11 @@ Open `preview.html` in a browser to see the example profiles side by side.
 ## Known limits
 
 - The viewpoint is fixed. An image in a README cannot run script or receive pointer input, so there is no camera control, no interaction and no physics.
-- Dense scenes are large. The examples are between 79 kB and 278 kB.
+- The examples are between 62 kB and 118 kB. Every palm shares one of two crowns, mirrored and scaled, so palms look more alike than hand-drawn ones would. [The size note](docs/notes/2026-11-19-svg-size-options.md) lists what would shrink them further.
 - Objects are sorted by the distance of their centre, so objects that pass through each other are painted in the wrong order. Sea animals and the canoe also pass under jetties and through posts without being hidden by them.
 - Animals and visitors hold one pose. They move along a path, but they do not jump, walk or react to each other.
 - The water shading recomputes a filter on every frame. Its playback cost is not measured.
-- Rendering and animation were checked in a GitHub README on the web in Chrome with the dark theme, and in the GitHub mobile app on iOS. Other browsers and the light theme on GitHub are not confirmed yet.
+- Rendering and animation were checked in a GitHub README on the web in Chrome with the dark theme, and in the GitHub mobile app on iOS. Other browsers and the light theme on GitHub are not confirmed yet. [The rendering note](docs/notes/2026-11-19-rendering-checks.md) says how to capture a scene and what a capture cannot prove.
 
 ## License
 
