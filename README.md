@@ -76,4 +76,8 @@ The second command draws the inhabited variant.
 - Dense scenes are large. The inhabited example is about 247 kB and the island examples are between 112 kB and 176 kB.
 - Objects are sorted by the distance of their centre, so objects that pass through each other are painted in the wrong order.
 - The water shading recomputes a filter on every frame. Its playback cost is not measured.
-- Rendering was checked in Chrome only. GitHub on the web and the GitHub mobile app are not confirmed yet.
+- Rendering and animation were checked in a GitHub README on the web in Chrome with the dark theme, and in the GitHub mobile app on iOS. Other browsers and the light theme on GitHub are not confirmed yet.
+
+## License
+
+[MIT](LICENSE)
