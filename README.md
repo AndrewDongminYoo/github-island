@@ -126,6 +126,22 @@ The `Daily generation` workflow runs this command once a day and on manual dispa
 A scheduled run fails with `Output branch is absent` until one manual dispatch with the `bootstrap` input creates the branch.
 `publish` publishes a bundle that was built separately, and `restore` brings back an earlier published bundle through a new commit, so the history of `output` is never rewritten.
 
+## Playground
+
+`playground/index.html` is a page with a slider for each signal and a choice of growth stage.
+It redraws the island on every change, shows its size against the byte budget, and keeps the settings in the address so that a view can be shared.
+
+The page does not have a renderer of its own.
+It loads [Pyodide](https://pyodide.org) and runs `render.py` and the modules it imports in the browser, so the page and the published image always come from the same code.
+The first load fetches the Python runtime from a CDN and takes a few seconds; after that, drawing happens in the browser and nothing is sent anywhere.
+
+```bash
+python tools/playground.py work/site
+python -m http.server --directory work/site
+```
+
+The `Playground` workflow builds the same site and deploys it to GitHub Pages on a push to `main`.
+
 ## Development
 
 ```bash
