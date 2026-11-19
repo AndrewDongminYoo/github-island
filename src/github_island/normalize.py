@@ -30,10 +30,12 @@ FIELDS = {
 
 def activity_query(metric):
     field, entity = FIELDS[metric]
+    # The owner tells a contribution to someone else's repository from one to
+    # the subject's own. Reviews do not need it.
     details = (
         "pullRequest{id} repository{id visibility}"
         if metric == "reviews"
-        else entity + "{id repository{id visibility}}"
+        else entity + "{id repository{id visibility owner{id}}}"
     )
     return """query($login:String!, $cursor:String, $from:DateTime!, $to:DateTime!){
       user(login:$login){id login contributionsCollection(from:$from,to:$to){
@@ -121,7 +123,10 @@ def collect(
                 raise ValueError("Conflicting repository observations")
             repositories[key] = stock
 
-        days = {day: {metric: 0 for metric in FIELDS} for day in day_range(start, end)}
+        days = {
+            day: {**{metric: 0 for metric in FIELDS}, "outside": 0}
+            for day in day_range(start, end)
+        }
         for metric, (field, entity) in FIELDS.items():
             seen = set()
             window_start = start
@@ -148,6 +153,10 @@ def collect(
                     )
                     if not public_repository(repo, excluded):
                         continue
+                    outside = (
+                        metric != "reviews"
+                        and identifier(repo["owner"]["id"]) != subject_id
+                    )
                     item_id = identifier(item["id"])
                     try:
                         occurred = datetime.fromisoformat(
@@ -163,6 +172,7 @@ def collect(
                     key = (item_id, day) if metric == "reviews" else item_id
                     if key not in seen:
                         days[day.isoformat()][metric] += 1
+                        days[day.isoformat()]["outside"] += outside
                         seen.add(key)
                 window_start = window_end
         snapshot = validate_snapshot(

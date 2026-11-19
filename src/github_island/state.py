@@ -100,6 +100,8 @@ def validate_state(state):
         if day <= last:
             for metric in ACTIVITY:
                 count(record[metric])
+            if record["outside"] > record["prs"] + record["issues"]:
+                raise ValueError("Outside contributions exceed their day's activity")
             if record["activity_xp_awarded"] < activity_xp(record):
                 raise ValueError("Activity award is below observed counts")
             completed.append(day)

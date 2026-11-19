@@ -45,3 +45,14 @@ Review of the pull request for step 3 found two values that a generic fallback l
 Both passed because the fallback accepted any letters.
 The fallback is removed, and every allowed attribute has a grammar of its own, checked by `tests/test_validate.py`.
 The validator still does not parse geometry: a path is checked for its alphabet, not for the shape it draws.
+
+## Reconciliation, 2026-11-19, outside contributions
+
+The decisions above say that scoring and the state schema are version 1 of github-terrarium, and that visitors follow reviews.
+The shipped code in `src/github_island/growth.py`, `models.py`, `normalize.py` and `state.py` is the authority, and it differs in one place.
+A first live collection showed 868 pull requests and 0 reviews in 30 days, so an account that works mostly alone would never see a visitor.
+Compatibility with github-terrarium was dropped as a goal on the same day.
+Each day now also counts `outside`: the pull requests and issues opened in public repositories that the account does not own.
+The count is a subset of the pull requests and issues of that day, earns no experience, and has a trait that reaches 1 at 10.
+Visitors follow the larger of the review trait and the outside trait.
+The change was made before the first publication, so no published state had to be migrated.

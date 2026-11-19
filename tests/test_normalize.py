@@ -19,9 +19,11 @@ def page(nodes=(), cursor=None):
     }
 
 
-def event(day, item="PR1", visibility="PUBLIC", repository="R1", metric="prs"):
+def event(
+    day, item="PR1", visibility="PUBLIC", repository="R1", metric="prs", owner="U1"
+):
     value = {"isRestricted": False, "occurredAt": day + "T00:00:00Z"}
-    repo = {"id": repository, "visibility": visibility}
+    repo = {"id": repository, "visibility": visibility, "owner": {"id": owner}}
     value["issue" if metric == "issues" else "pullRequest"] = {
         "id": item,
         "repository": repo,
@@ -102,8 +104,8 @@ class CollectionTests(unittest.TestCase):
         self.assertEqual(
             value["days"],
             {
-                "2026-11-13": {"prs": 1, "issues": 1, "reviews": 1},
-                "2026-11-14": {"prs": 0, "issues": 0, "reviews": 1},
+                "2026-11-13": {"prs": 1, "issues": 1, "reviews": 1, "outside": 0},
+                "2026-11-14": {"prs": 0, "issues": 0, "reviews": 1, "outside": 0},
             },
         )
         self.assertNotIn("PRIVATE", str(value))

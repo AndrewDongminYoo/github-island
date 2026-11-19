@@ -37,7 +37,14 @@ STAGE_BOUNDARIES = [
     (3999, "mature"),
     (4000, "sanctuary"),
 ]
-TRAIT_CAPS = {"forks": 100, "issues": 20, "prs": 30, "reviews": 60, "stars": 500}
+TRAIT_CAPS = {
+    "forks": 100,
+    "issues": 20,
+    "outside": 10,
+    "prs": 30,
+    "reviews": 60,
+    "stars": 500,
+}
 # Literal values derived from scoring version 1 on 2026-11-17; never regenerate.
 PERSONAS = {
     "empty": {
@@ -47,6 +54,7 @@ PERSONAS = {
         "traits": {
             "forks": 0.0,
             "issues": 0.0,
+            "outside": 0.0,
             "prs": 0.0,
             "reviews": 0.0,
             "stars": 0.0,
@@ -59,6 +67,7 @@ PERSONAS = {
         "traits": {
             "forks": 0.0,
             "issues": 1.0,
+            "outside": 0.0,
             "prs": 0.0,
             "reviews": 0.0,
             "stars": 0.0,
@@ -71,6 +80,7 @@ PERSONAS = {
         "traits": {
             "forks": 1.0,
             "issues": 0.0,
+            "outside": 0.0,
             "prs": 0.0,
             "reviews": 0.0,
             "stars": 1.0,
@@ -83,6 +93,7 @@ PERSONAS = {
         "traits": {
             "forks": 0.0,
             "issues": 0.0,
+            "outside": 0.0,
             "prs": 1.0,
             "reviews": 0.0,
             "stars": 0.0,
@@ -95,6 +106,7 @@ PERSONAS = {
         "traits": {
             "forks": 0.0,
             "issues": 0.0,
+            "outside": 0.0,
             "prs": 0.0,
             "reviews": 1.0,
             "stars": 0.0,
@@ -103,10 +115,18 @@ PERSONAS = {
 }
 # The persona fixtures saturate every nonzero trait, so pin the curve below caps.
 MID_TRAITS = {
-    "inputs": {"forks": 2, "issues": 3, "prs": 4, "reviews": 5, "stars": 10},
+    "inputs": {
+        "forks": 2,
+        "issues": 3,
+        "outside": 2,
+        "prs": 4,
+        "reviews": 5,
+        "stars": 10,
+    },
     "expected": {
         "forks": 0.238046,
         "issues": 0.45534,
+        "outside": 0.458157,
         "prs": 0.468679,
         "reviews": 0.435859,
         "stars": 0.385724,
@@ -115,7 +135,7 @@ MID_TRAITS = {
 
 
 def quiet():
-    return {"issues": 0, "prs": 0, "reviews": 0}
+    return {"issues": 0, "outside": 0, "prs": 0, "reviews": 0}
 
 
 def rounded(values):

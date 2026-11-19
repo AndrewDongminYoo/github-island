@@ -14,11 +14,12 @@ query($login:String!, $owner:String!, $name:String!, $from:DateTime!, $to:DateTi
     contributionsCollection(from:$from, to:$to) {
       pullRequestContributions(first:100) {
         nodes { isRestricted occurredAt
-          pullRequest { id repository { id visibility } } }
+          pullRequest { id repository { id visibility owner { id } } } }
         pageInfo { hasNextPage }
       }
       issueContributions(first:100) {
-        nodes { isRestricted occurredAt issue { id repository { id visibility } } }
+        nodes { isRestricted occurredAt
+          issue { id repository { id visibility owner { id } } } }
         pageInfo { hasNextPage }
       }
       pullRequestReviewContributions(first:100) {
