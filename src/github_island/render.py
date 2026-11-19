@@ -1,17 +1,13 @@
-"""Generate an isometric island as one self-contained animated SVG.
-
-Usage: python3 generate.py OUTPUT.svg [PROFILE] [transparent]
-
-PROFILE is prs,reviews,issues,stars,forks, each from 0 to 1.
+"""Draw an isometric island as one self-contained animated SVG.
 
 The scene is modelled in 3D world units, projected to 2D here, and painted
 back to front. The browser only runs CSS and SMIL animation on the result.
+Nothing here reads the clock, the network or the file system: the same traits
+and the same key always give the same bytes.
 """
 
 import math
 import random
-import sys
-from pathlib import Path
 
 A = math.cos(math.radians(30))
 B = 0.5
@@ -60,9 +56,7 @@ def fmt(points):
 
 
 def attrs(kw):
-    return "".join(
-        f' {k.rstrip("_").replace("_", "-")}="{v}"' for k, v in kw.items()
-    )
+    return "".join(f' {k.rstrip("_").replace("_", "-")}="{v}"' for k, v in kw.items())
 
 
 def poly(points, **kw):
@@ -123,7 +117,9 @@ def face_y():
 def face_x():
     # Plane x = W. Local u runs from the near corner toward y = 0.
     k = S / LOCAL
-    return f"matrix({A * k:.4f} {-B * k:.4f} 0 {k:.4f} {CX:.1f} {CY + 2 * B * S * W:.1f})"
+    return (
+        f"matrix({A * k:.4f} {-B * k:.4f} 0 {k:.4f} {CX:.1f} {CY + 2 * B * S * W:.1f})"
+    )
 
 
 def hull(points):
@@ -145,8 +141,14 @@ def hull(points):
 
 def box(x0, y0, z0, x1, y1, z1, color, fx=0.72, fy=0.87):
     return [
-        solid(P3([(x1, y0, z0), (x1, y1, z0), (x1, y1, z1), (x1, y0, z1)]), shade(color, fx)),
-        solid(P3([(x0, y1, z0), (x1, y1, z0), (x1, y1, z1), (x0, y1, z1)]), shade(color, fy)),
+        solid(
+            P3([(x1, y0, z0), (x1, y1, z0), (x1, y1, z1), (x1, y0, z1)]),
+            shade(color, fx),
+        ),
+        solid(
+            P3([(x0, y1, z0), (x1, y1, z0), (x1, y1, z1), (x0, y1, z1)]),
+            shade(color, fy),
+        ),
         solid(P3([(x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)]), color),
     ]
 
@@ -163,7 +165,12 @@ def roof(xc, yc, h, z0, t, color):
     for a, b, f in ((c10, c11, 0.55), (c01, c11, 0.68)):
         drop = [(a[0], a[1], z0 - 0.1), (b[0], b[1], z0 - 0.1)]
         out.append(solid(P3([a, b, drop[1], drop[0]]), shade(color, f)))
-    for a, b, f in ((c00, c10, 1.04), (c00, c01, 0.96), (c10, c11, 0.74), (c01, c11, 0.9)):
+    for a, b, f in (
+        (c00, c10, 1.04),
+        (c00, c01, 0.96),
+        (c10, c11, 0.74),
+        (c01, c11, 0.9),
+    ):
         out.append(solid(P3([a, b, apex]), shade(color, f)))
         for q in (0.22, 0.44, 0.64, 0.82):
             out.append(
@@ -186,41 +193,77 @@ def deck(x0, y0, x1, y1, along_x=True):
         steps = int((y1 - y0) / 0.18)
         for i in range(1, steps):
             y = y0 + (y1 - y0) * i / steps
-            out.append(line(P(x0, y, DECK), P(x1, y, DECK), stroke=stroke, stroke_width="0.6"))
+            out.append(
+                line(P(x0, y, DECK), P(x1, y, DECK), stroke=stroke, stroke_width="0.6")
+            )
     else:
         steps = int((x1 - x0) / 0.18)
         for i in range(1, steps):
             x = x0 + (x1 - x0) * i / steps
-            out.append(line(P(x, y0, DECK), P(x, y1, DECK), stroke=stroke, stroke_width="0.6"))
+            out.append(
+                line(P(x, y0, DECK), P(x, y1, DECK), stroke=stroke, stroke_width="0.6")
+            )
     return out
 
 
 def bungalow(xc, yc):
     x0, x1, y0, y1 = xc - 0.75, xc + 0.75, yc - 0.75, yc + 1.25
     out = []
-    corners = [(x0 + 0.1, y0 + 0.1), (x1 - 0.1, y0 + 0.1), (x0 + 0.1, y1 - 0.1), (x1 - 0.1, y1 - 0.1)]
+    corners = [
+        (x0 + 0.1, y0 + 0.1),
+        (x1 - 0.1, y0 + 0.1),
+        (x0 + 0.1, y1 - 0.1),
+        (x1 - 0.1, y1 - 0.1),
+    ]
     for px, py in corners:
         out += post(px, py, H, DECK - 0.1)
     out += deck(x0, y0, x1, y1)
     # Ladder from the porch into the water.
     for dx in (0.25, 0.45):
         out.append(
-            line(P(xc + dx, y1, DECK), P(xc + dx, y1 + 0.12, H - 0.1), stroke="#f3ede0", stroke_width="1.3")
+            line(
+                P(xc + dx, y1, DECK),
+                P(xc + dx, y1 + 0.12, H - 0.1),
+                stroke="#f3ede0",
+                stroke_width="1.3",
+            )
         )
     # Sun loungers on the porch.
     for lx in (xc - 0.55, xc - 0.15):
         out += box(lx, yc + 0.72, DECK, lx + 0.26, yc + 1.15, DECK + 0.07, "#ffffff")
-        out += box(lx, yc + 0.72, DECK + 0.07, lx + 0.26, yc + 0.84, DECK + 0.17, "#8fd6d0")
+        out += box(
+            lx, yc + 0.72, DECK + 0.07, lx + 0.26, yc + 0.84, DECK + 0.17, "#8fd6d0"
+        )
     wz = DECK + 1.0
     out += box(xc - 0.6, yc - 0.6, DECK, xc + 0.6, yc + 0.6, wz, WALL)
-    door = [(xc - 0.2, yc + 0.6, DECK), (xc + 0.2, yc + 0.6, DECK), (xc + 0.2, yc + 0.6, DECK + 0.58), (xc - 0.2, yc + 0.6, DECK + 0.58)]
+    door = [
+        (xc - 0.2, yc + 0.6, DECK),
+        (xc + 0.2, yc + 0.6, DECK),
+        (xc + 0.2, yc + 0.6, DECK + 0.58),
+        (xc - 0.2, yc + 0.6, DECK + 0.58),
+    ]
     out.append(solid(P3(door), "#6b4a33"))
-    window = [(xc + 0.6, yc - 0.3, DECK + 0.3), (xc + 0.6, yc + 0.3, DECK + 0.3), (xc + 0.6, yc + 0.3, DECK + 0.6), (xc + 0.6, yc - 0.3, DECK + 0.6)]
+    window = [
+        (xc + 0.6, yc - 0.3, DECK + 0.3),
+        (xc + 0.6, yc + 0.3, DECK + 0.3),
+        (xc + 0.6, yc + 0.3, DECK + 0.6),
+        (xc + 0.6, yc - 0.3, DECK + 0.6),
+    ]
     out.append(poly(P3(window), fill="#8fcfe0", stroke="#fffaf0", stroke_width="1"))
     # Eave shadow on the two visible walls.
     for band in (
-        [(xc + 0.6, yc - 0.6, wz - 0.16), (xc + 0.6, yc + 0.6, wz - 0.16), (xc + 0.6, yc + 0.6, wz), (xc + 0.6, yc - 0.6, wz)],
-        [(xc - 0.6, yc + 0.6, wz - 0.16), (xc + 0.6, yc + 0.6, wz - 0.16), (xc + 0.6, yc + 0.6, wz), (xc - 0.6, yc + 0.6, wz)],
+        [
+            (xc + 0.6, yc - 0.6, wz - 0.16),
+            (xc + 0.6, yc + 0.6, wz - 0.16),
+            (xc + 0.6, yc + 0.6, wz),
+            (xc + 0.6, yc - 0.6, wz),
+        ],
+        [
+            (xc - 0.6, yc + 0.6, wz - 0.16),
+            (xc + 0.6, yc + 0.6, wz - 0.16),
+            (xc + 0.6, yc + 0.6, wz),
+            (xc - 0.6, yc + 0.6, wz),
+        ],
     ):
         out.append(poly(P3(band), fill="#3a2a18", opacity="0.22"))
     out += roof(xc, yc, 0.86, wz, 0.7, THATCH)
@@ -230,7 +273,12 @@ def bungalow(xc, yc):
 def island_radius(theta, z, radius=None, top=None):
     radius = ISLAND_R if radius is None else radius
     top = ISLAND_TOP if top is None else top
-    wobble = 1 + 0.10 * math.sin(3 * theta + 0.6) + 0.06 * math.sin(5 * theta + 2.1) + 0.04 * math.sin(2 * theta + 4)
+    wobble = (
+        1
+        + 0.10 * math.sin(3 * theta + 0.6)
+        + 0.06 * math.sin(5 * theta + 2.1)
+        + 0.04 * math.sin(2 * theta + 4)
+    )
     return radius * (1 - 0.7 * (z / top) ** 1.6) * wobble
 
 
@@ -238,8 +286,14 @@ def island_ring(z, scale=1.0, n=48, center=None, radius=None, top=None):
     cx, cy = ISLAND if center is None else center
     return [
         (
-            cx + island_radius(2 * math.pi * i / n, z, radius, top) * scale * math.cos(2 * math.pi * i / n),
-            cy + island_radius(2 * math.pi * i / n, z, radius, top) * scale * math.sin(2 * math.pi * i / n),
+            cx
+            + island_radius(2 * math.pi * i / n, z, radius, top)
+            * scale
+            * math.cos(2 * math.pi * i / n),
+            cy
+            + island_radius(2 * math.pi * i / n, z, radius, top)
+            * scale
+            * math.sin(2 * math.pi * i / n),
             z,
         )
         for i in range(n)
@@ -268,12 +322,12 @@ def ribbon(points, widths):
 CROWN_FRONDS = 12
 
 
-def crown_defs(variant):
+def crown_defs(variant, key):
     """Define one palm crown around the origin, frond by frond in paint order.
 
     Every palm reuses these fronds, so a scene pays for the frond geometry once.
     """
-    rnd = random.Random(40 + variant)
+    rnd = random.Random(f"{key}:crown:{variant}")
     fronds = []
     for k in range(CROWN_FRONDS):
         theta = 2 * math.pi * k / CROWN_FRONDS + rnd.uniform(-0.2, 0.2)
@@ -315,14 +369,20 @@ def palm(bx, by, height, lean, seed, bz=None, size=1.0):
         bz = island_height(bx - ISLAND[0], by - ISLAND[1])
     out = []
     spine = [
-        P(bx + lean[0] * (i / 10) ** 2, by + lean[1] * (i / 10) ** 2, bz + height * i / 10)
+        P(
+            bx + lean[0] * (i / 10) ** 2,
+            by + lean[1] * (i / 10) ** 2,
+            bz + height * i / 10,
+        )
         for i in range(11)
     ]
     widths = [(5.6 - 2.6 * i / 10) * size for i in range(11)]
     left, right = ribbon(spine, widths)
     out.append(solid(left + right[::-1], "#b08d63"))
     for i in range(1, 10):
-        out.append(line(left[i], right[i], stroke="#8a6b47", stroke_width="1", opacity="0.7"))
+        out.append(
+            line(left[i], right[i], stroke="#8a6b47", stroke_width="1", opacity="0.7")
+        )
     sx, sy = P(bx + lean[0], by + lean[1], bz + height)
     # The crown is one of two shared shapes, mirrored for half of the palms and
     # scaled with the trunk. Each frond sways about the crown, the group's origin.
@@ -339,8 +399,8 @@ def palm(bx, by, height, lean, seed, bz=None, size=1.0):
     return out
 
 
-def bush(x, y, seed):
-    rnd = random.Random(seed)
+def bush(x, y, key, index):
+    rnd = random.Random(f"{key}:bush:{index}")
     z = island_height(x - ISLAND[0], y - ISLAND[1])
     sx, sy = P(x, y, z)
     out = []
@@ -450,7 +510,18 @@ BUSHES = [(-1.2, -0.2), (0.1, -1.2), (1.0, 1.0), (-0.9, 1.1), (1.5, 0.4), (0.2, 
 SPREAD = 1.35  # palm and bush offsets are scaled out to fill the island top
 ISLETS = [(10.7, 1.7), (1.7, 10.7), (10.6, 10.6)]
 ISLET_R, ISLET_TOP = 0.95, 1.6
-REEFS = [(10.9, 6.2), (6.0, 11.0), (9.6, 9.0), (1.0, 6.0), (2.4, 8.9), (6.2, 0.9), (1.2, 1.4), (8.9, 2.6), (3.6, 10.9), (9.0, 11.0)]
+REEFS = [
+    (10.9, 6.2),
+    (6.0, 11.0),
+    (9.6, 9.0),
+    (1.0, 6.0),
+    (2.4, 8.9),
+    (6.2, 0.9),
+    (1.2, 1.4),
+    (8.9, 2.6),
+    (3.6, 10.9),
+    (9.0, 11.0),
+]
 RIPPLES = [(10.2, 9.6), (2.0, 9.8), (9.8, 2.2), (8.6, 10.8), (11.0, 7.4), (4.0, 11.0)]
 # Visitors arrive in this order as the review signal grows.
 RINGS = [(2.0, 7.9, "#ff7fa0"), (4.3, 9.3, "#ffb347"), (8.0, 9.4, "#7fb6ff")]
@@ -478,9 +549,9 @@ def swim(path, duration, begin, body):
     )
 
 
-def wildlife(prs):
+def wildlife(prs, key):
     """Return swimmers and their seabed shadows. Larger animals join as `prs` grows."""
-    rnd = random.Random(11)
+    rnd = random.Random(f"{key}:wildlife")
     bodies, shadows = [], []
     schools = [
         (lane(4.7), 34, 3 + round(6 * prs), "#1d6f7a"),
@@ -495,15 +566,28 @@ def wildlife(prs):
             )
             bodies.append(swim(path, duration, i * 0.45 + rnd.uniform(0, 0.2), fish))
     for i in range(steps(prs, 0.2, 0.5)):
-        bodies.append(swim(lane((4.55, 5.15)[i], i == 0), (52, 64)[i], (32, 13)[i], TURTLE))
+        bodies.append(
+            swim(lane((4.55, 5.15)[i], i == 0), (52, 64)[i], (32, 13)[i], TURTLE)
+        )
     for i in range(steps(prs, 0.4, 0.7)):
-        bodies.append(swim(lane((5.0, 4.4)[i], i == 1), (70, 58)[i], (33, 40)[i], RAY_BODY))
+        bodies.append(
+            swim(lane((5.0, 4.4)[i], i == 1), (70, 58)[i], (33, 40)[i], RAY_BODY)
+        )
     if prs > 0.6:
         for i in range(3):
             place = f"translate({-i * 20} {(-36, 32, 0)[i]})"
             path, begin = lane(4.9, False), 8.4 + i * 1.1
-            bodies.append(swim(path, 30, begin, f'<g transform="{place}">{DOLPHIN}</g>'))
-            shadows.append(swim(path, 30, begin, f'<path d="{DOLPHIN_OUTLINE}" transform="{place}"/>'))
+            bodies.append(
+                swim(path, 30, begin, f'<g transform="{place}">{DOLPHIN}</g>')
+            )
+            shadows.append(
+                swim(
+                    path,
+                    30,
+                    begin,
+                    f'<path d="{DOLPHIN_OUTLINE}" transform="{place}"/>',
+                )
+            )
     if prs > 0.85:
         spots = ""
         for _ in range(30):
@@ -527,47 +611,84 @@ def parasol(x, y, color):
     """A beach parasol with a towel and a sunbather beside it."""
     z = island_height(x - ISLAND[0], y - ISLAND[1])
     out = []
-    towel = [(x - 0.58, y + 0.12), (x - 0.12, y + 0.12), (x - 0.12, y + 0.78), (x - 0.58, y + 0.78)]
+    towel = [
+        (x - 0.58, y + 0.12),
+        (x - 0.12, y + 0.12),
+        (x - 0.12, y + 0.78),
+        (x - 0.58, y + 0.78),
+    ]
     out.append(solid(P3([(tx, ty, z + 0.02) for tx, ty in towel]), "#ffffff"))
-    stripe = [(x - 0.42, y + 0.12), (x - 0.28, y + 0.12), (x - 0.28, y + 0.78), (x - 0.42, y + 0.78)]
+    stripe = [
+        (x - 0.42, y + 0.12),
+        (x - 0.28, y + 0.12),
+        (x - 0.28, y + 0.78),
+        (x - 0.42, y + 0.78),
+    ]
     out.append(solid(P3([(tx, ty, z + 0.02) for tx, ty in stripe]), color))
-    head, hip, feet = P(x - 0.35, y + 0.24, z + 0.07), P(x - 0.35, y + 0.46, z + 0.07), P(x - 0.35, y + 0.7, z + 0.07)
-    out.append(line(hip, feet, stroke="#e9a97f", stroke_width="4", stroke_linecap="round"))
-    out.append(line(head, hip, stroke="#2f6f8f", stroke_width="4.6", stroke_linecap="round"))
-    out.append(f'<circle cx="{head[0]:.1f}" cy="{head[1] - 2.5:.1f}" r="2.8" fill="#4a3324"/>')
-    out.append(line(P(x, y, z), P(x, y, z + 0.95), stroke="#8a6b47", stroke_width="1.8"))
+    head, hip, feet = (
+        P(x - 0.35, y + 0.24, z + 0.07),
+        P(x - 0.35, y + 0.46, z + 0.07),
+        P(x - 0.35, y + 0.7, z + 0.07),
+    )
+    out.append(
+        line(hip, feet, stroke="#e9a97f", stroke_width="4", stroke_linecap="round")
+    )
+    out.append(
+        line(head, hip, stroke="#2f6f8f", stroke_width="4.6", stroke_linecap="round")
+    )
+    out.append(
+        f'<circle cx="{head[0]:.1f}" cy="{head[1] - 2.5:.1f}" r="2.8" fill="#4a3324"/>'
+    )
+    out.append(
+        line(P(x, y, z), P(x, y, z + 0.95), stroke="#8a6b47", stroke_width="1.8")
+    )
     apex = (x, y, z + 0.98)
     faces = []
     for k in range(8):
         a0, a1 = 2 * math.pi * k / 8, 2 * math.pi * (k + 1) / 8
         mid = (a0 + a1) / 2
-        rim = [(x + 0.52 * math.cos(a), y + 0.52 * math.sin(a), z + 0.72) for a in (a0, a1)]
+        rim = [
+            (x + 0.52 * math.cos(a), y + 0.52 * math.sin(a), z + 0.72) for a in (a0, a1)
+        ]
         facing = 0.8 + 0.2 * math.cos(mid - math.radians(200))
-        faces.append((math.cos(mid) + math.sin(mid), rim, shade(color if k % 2 else "#fdf8ee", facing)))
+        faces.append(
+            (
+                math.cos(mid) + math.sin(mid),
+                rim,
+                shade(color if k % 2 else "#fdf8ee", facing),
+            )
+        )
     for _, rim, fill in sorted(faces, key=lambda face: face[0]):
         out.append(solid(P3([rim[0], rim[1], apex]), fill))
     return out
 
 
-def build(traits=None, transparent=False):
+def render_scene(traits=None, transparent=False, key="example"):
     """Draw the island. `traits` maps each activity signal to a number from 0 to 1.
 
     Pull requests bring larger sea animals, reviews bring visitors, issues build
     reefs, stars add glints on the water, and forks raise satellite islets. The
     vegetation follows `growth`, which defaults to the mean of the first three.
+    `key` seeds every random choice, so each key gets its own island and the
+    same key always gets the same one.
     """
     traits = {**DEFAULT, **(traits or {})}
-    growth = traits.get("growth", (traits["prs"] + traits["reviews"] + traits["issues"]) / 3)
+    growth = traits.get(
+        "growth", (traits["prs"] + traits["reviews"] + traits["issues"]) / 3
+    )
     reviews = traits["reviews"]
-    rnd = random.Random(7)
+    rnd = random.Random(f"{key}:scene")
     homes = HOMES[: steps(reviews, 0.6, 0.75, 0.9)]
     rings = RINGS[: steps(reviews, 0.15, 0.35, 0.55)]
     parasols = PARASOLS[: steps(reviews, 0.45, 0.6, 0.8)]
     canoe = reviews > 0.3
     islets = ISLETS[: round(traits["forks"] * len(ISLETS))]
     palms = 1 + round(growth * 5)
-    bodies, shadows = wildlife(traits["prs"])
-    jetty = [(JETTY_X + i * JETTY_SEGMENT, JETTY_X + (i + 1) * JETTY_SEGMENT) for i in range(2 if homes else 0)]
+    bodies, shadows = wildlife(traits["prs"], key)
+    jetty = [
+        (JETTY_X + i * JETTY_SEGMENT, JETTY_X + (i + 1) * JETTY_SEGMENT)
+        for i in range(2 if homes else 0)
+    ]
     jetty_length = len(jetty) * JETTY_SEGMENT * LOCAL
 
     def clear_of(x, y, places, gap):
@@ -577,7 +698,9 @@ def build(traits=None, transparent=False):
     add = o.append
     # The transparent variant is cropped to the block, its palms and its shadow.
     view = "200 90 1000 790" if transparent else "0 0 1200 890"
-    add(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-labelledby="t d">')
+    add(
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-labelledby="t d">'
+    )
     add('<title id="t">GitHub island</title>')
     add(
         '<desc id="d">An isometric cut block of a tropical island in translucent water. '
@@ -587,8 +710,8 @@ def build(traits=None, transparent=False):
     top_y, bottom_y = CY - H * S, CY + W * S - H * S
     # Shapes that repeat are defined once, at the world origin, and placed with `use`.
     shared = (
-        crown_defs(0)
-        + crown_defs(1)
+        crown_defs(0, key)
+        + crown_defs(1, key)
         + '<g id="nuts" fill="#5b4027"><circle cx="-3" cy="3" r="3.2"/><circle cx="3" cy="4" r="3.2"/>'
         '<circle cy="6" r="3.2"/></g>'
         f'<path id="k" d="{SPARK}" fill="#ffffff"/>'
@@ -640,11 +763,28 @@ def build(traits=None, transparent=False):
 
     # Shadow of the whole block on the table.
     base = [(0, 0), (W, 0), (W, W), (0, W)]
-    cast = [P(x, y, -DEPTH) for x, y in base] + [P(x + 2.2, y - 1.2, -DEPTH) for x, y in base]
-    add(poly(hull(cast), class_="cast", fill="#5b5346", opacity="0.3", filter="url(#soft)"))
+    cast = [P(x, y, -DEPTH) for x, y in base] + [
+        P(x + 2.2, y - 1.2, -DEPTH) for x, y in base
+    ]
+    add(
+        poly(
+            hull(cast),
+            class_="cast",
+            fill="#5b5346",
+            opacity="0.3",
+            filter="url(#soft)",
+        )
+    )
 
     # Soil strata on the two visible cut faces.
-    bounds = [(0, 0, 0, 0), (-0.75, 0.06, 1.3, 0.4), (-1.2, 0.08, 0.9, 2.0), (-1.95, 0.1, 0.7, 4.1), (-2.6, 0.08, 1.1, 1.0), (-DEPTH, 0, 0, 0)]
+    bounds = [
+        (0, 0, 0, 0),
+        (-0.75, 0.06, 1.3, 0.4),
+        (-1.2, 0.08, 0.9, 2.0),
+        (-1.95, 0.1, 0.7, 4.1),
+        (-2.6, 0.08, 1.1, 1.0),
+        (-DEPTH, 0, 0, 0),
+    ]
     layers = ["#f3e6c8", "#fbf5e6", "#e6cba0", "#cfa97a", "#8f6a49"]
 
     def edge(u):
@@ -668,7 +808,9 @@ def build(traits=None, transparent=False):
         x, y = P(*edge(u), z)
         r = rnd.uniform(1.3, 3.2)
         fill = "#fff8ea" if rnd.random() < 0.75 else "#6d5038"
-        pebbles[fill].append(f'<ellipse cx="{num(x)}" cy="{num(y)}" rx="{num(r)}" ry="{num(r * 0.7)}"/>')
+        pebbles[fill].append(
+            f'<ellipse cx="{num(x)}" cy="{num(y)}" rx="{num(r)}" ry="{num(r * 0.7)}"/>'
+        )
     for fill, marks in pebbles.items():
         add(f'<g fill="{fill}" opacity="0.85">' + "".join(marks) + "</g>")
     for matrix in (face_y(), face_x()):
@@ -676,7 +818,15 @@ def build(traits=None, transparent=False):
             f'<g transform="{matrix}"><rect width="{W * LOCAL:.0f}" height="{DEPTH * LOCAL:.0f}" '
             'filter="url(#grain)" opacity="0.55"/></g>'
         )
-    add(line(P(W, W, 0), P(W, W, -DEPTH), stroke="#ffffff", stroke_width="1.2", opacity="0.3"))
+    add(
+        line(
+            P(W, W, 0),
+            P(W, W, -DEPTH),
+            stroke="#ffffff",
+            stroke_width="1.2",
+            opacity="0.3",
+        )
+    )
 
     # Inner back walls of the water volume, then the seabed.
     add(poly(P3([(0, 0, 0), (W, 0, 0), (W, 0, H), (0, 0, H)]), fill="#bfeee4"))
@@ -691,7 +841,9 @@ def build(traits=None, transparent=False):
             f'<ellipse cx="{x:.0f}" cy="{y:.0f}" rx="{rnd.uniform(60, 150):.0f}" '
             f'ry="{rnd.uniform(30, 70):.0f}" fill="#fbf0d2" opacity="0.5"/>'
         )
-    add(f'<rect width="{W * LOCAL:.0f}" height="{W * LOCAL:.0f}" filter="url(#caustic)" opacity="0.5"/>')
+    add(
+        f'<rect width="{W * LOCAL:.0f}" height="{W * LOCAL:.0f}" filter="url(#caustic)" opacity="0.5"/>'
+    )
     add('<g filter="url(#soft-local)" fill="#16484a" opacity="0.3">')
     for xc, yc in homes:
         x0, y0 = (xc - 0.75 + SHADOW[0]) * LOCAL, (yc - 0.75 + SHADOW[1]) * LOCAL
@@ -701,16 +853,28 @@ def build(traits=None, transparent=False):
         add(f'<rect x="{x0:.0f}" y="{y0:.0f}" width="{jetty_length:.0f}" height="50"/>')
     add("</g>")
     palette = ["#ff8a7a", "#ffb347", "#b07cff", "#5fd3a8", "#ff6fb5", "#ffd95e"]
-    reefs = [reef for reef in REEFS[: round(2 + traits["issues"] * 8)] if clear_of(*reef, homes, 1.7)]
+    reefs = [
+        reef
+        for reef in REEFS[: round(2 + traits["issues"] * 8)]
+        if clear_of(*reef, homes, 1.7)
+    ]
     for x, y in reefs:
         cx, cy = x * LOCAL, y * LOCAL
-        add(f'<ellipse cx="{cx + 14:.0f}" cy="{cy - 8:.0f}" rx="52" ry="40" fill="#16484a" opacity="0.2"/>')
+        add(
+            f'<ellipse cx="{cx + 14:.0f}" cy="{cy - 8:.0f}" rx="52" ry="40" fill="#16484a" opacity="0.2"/>'
+        )
         add(f'<ellipse cx="{cx:.0f}" cy="{cy:.0f}" rx="46" ry="36" fill="#d6caa8"/>')
         for _ in range(7):
-            px, py, r = cx + rnd.uniform(-34, 34), cy + rnd.uniform(-26, 26), rnd.uniform(8, 17)
+            px, py, r = (
+                cx + rnd.uniform(-34, 34),
+                cy + rnd.uniform(-26, 26),
+                rnd.uniform(8, 17),
+            )
             color = rnd.choice(palette)
             add(f'<circle cx="{px:.0f}" cy="{py:.0f}" r="{r:.0f}" fill="{color}"/>')
-            add(f'<circle cx="{px - r * 0.3:.0f}" cy="{py - r * 0.3:.0f}" r="{r * 0.4:.0f}" fill="{shade(color, 1.18)}"/>')
+            add(
+                f'<circle cx="{px - r * 0.3:.0f}" cy="{py - r * 0.3:.0f}" r="{r * 0.4:.0f}" fill="{shade(color, 1.18)}"/>'
+            )
     for x, y, _ in rings:
         add(
             f'<circle cx="{(x + 0.75) * LOCAL:.0f}" cy="{(y - 0.4) * LOCAL:.0f}" r="22" fill="none" '
@@ -720,7 +884,9 @@ def build(traits=None, transparent=False):
     add('<g fill="#16484a" opacity="0.2">')
     if canoe:
         hull_shadow = '<path d="M48 0C20 -14 -20 -14 -48 0C-20 14 20 14 48 0Z"/>'
-        add(f'<g transform="translate(75 -40)">{swim(canoe_path, 30, 0, hull_shadow)}</g>')
+        add(
+            f'<g transform="translate(75 -40)">{swim(canoe_path, 30, 0, hull_shadow)}</g>'
+        )
     if shadows:
         add('<g transform="translate(40 -22)">' + "".join(shadows) + "</g>")
     add("</g>")
@@ -751,13 +917,45 @@ def build(traits=None, transparent=False):
     # Water volume: translucent top, two cut faces, glass-edge highlights.
     top = P3([(0, 0, H), (W, 0, H), (W, W, H), (0, W, H)])
     add(poly(top, fill="url(#water-top)", fill_opacity="0.6"))
-    add(poly(P3([(0, W, 0), (W, W, 0), (W, W, H), (0, W, H)]), fill="url(#water-side)", fill_opacity="0.62"))
-    add(poly(P3([(W, W, 0), (W, 0, 0), (W, 0, H), (W, W, H)]), fill="url(#water-side)", fill_opacity="0.72"))
-    add(poly(P3([(0, W, H - 0.13), (W, W, H - 0.13), (W, W, H), (0, W, H)]), fill="#ffffff", opacity="0.28"))
-    add(poly(P3([(W, W, H - 0.13), (W, 0, H - 0.13), (W, 0, H), (W, W, H)]), fill="#ffffff", opacity="0.2"))
-    add(f'<polyline points="{fmt(P3([(0, W, H), (0, 0, H), (W, 0, H)]))}" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.45"/>')
-    add(f'<polyline points="{fmt(P3([(0, W, H), (W, W, H), (W, 0, H)]))}" fill="none" stroke="#ffffff" stroke-width="1.8" opacity="0.85"/>')
-    add(line(P(W, W, H), P(W, W, 0), stroke="#ffffff", stroke_width="1.4", opacity="0.5"))
+    add(
+        poly(
+            P3([(0, W, 0), (W, W, 0), (W, W, H), (0, W, H)]),
+            fill="url(#water-side)",
+            fill_opacity="0.62",
+        )
+    )
+    add(
+        poly(
+            P3([(W, W, 0), (W, 0, 0), (W, 0, H), (W, W, H)]),
+            fill="url(#water-side)",
+            fill_opacity="0.72",
+        )
+    )
+    add(
+        poly(
+            P3([(0, W, H - 0.13), (W, W, H - 0.13), (W, W, H), (0, W, H)]),
+            fill="#ffffff",
+            opacity="0.28",
+        )
+    )
+    add(
+        poly(
+            P3([(W, W, H - 0.13), (W, 0, H - 0.13), (W, 0, H), (W, W, H)]),
+            fill="#ffffff",
+            opacity="0.2",
+        )
+    )
+    add(
+        f'<polyline points="{fmt(P3([(0, W, H), (0, 0, H), (W, 0, H)]))}" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.45"/>'
+    )
+    add(
+        f'<polyline points="{fmt(P3([(0, W, H), (W, W, H), (W, 0, H)]))}" fill="none" stroke="#ffffff" stroke-width="1.8" opacity="0.85"/>'
+    )
+    add(
+        line(
+            P(W, W, H), P(W, W, 0), stroke="#ffffff", stroke_width="1.4", opacity="0.5"
+        )
+    )
 
     # Everything that lies flat on the water surface.
     add(f'<g transform="{ground(H)}">')
@@ -765,8 +963,20 @@ def build(traits=None, transparent=False):
         f'<rect width="{W * LOCAL:.0f}" height="{W * LOCAL:.0f}" filter="url(#waves)" '
         'opacity="0.32" style="mix-blend-mode:soft-light"/>'
     )
-    shore = "M" + "L".join(f"{x * LOCAL:.0f} {y * LOCAL:.0f}" for x, y, _ in island_ring(H, 1.04)) + "Z"
-    wide = "M" + "L".join(f"{x * LOCAL:.0f} {y * LOCAL:.0f}" for x, y, _ in island_ring(H, 1.16)) + "Z"
+    shore = (
+        "M"
+        + "L".join(
+            f"{x * LOCAL:.0f} {y * LOCAL:.0f}" for x, y, _ in island_ring(H, 1.04)
+        )
+        + "Z"
+    )
+    wide = (
+        "M"
+        + "L".join(
+            f"{x * LOCAL:.0f} {y * LOCAL:.0f}" for x, y, _ in island_ring(H, 1.16)
+        )
+        + "Z"
+    )
     add(f'<path d="{wide}" fill="#eafff8" opacity="0.3"/>')
     # Small waves roll in toward the beach, half a cycle apart.
     for delay in (0, 3.5):
@@ -774,14 +984,20 @@ def build(traits=None, transparent=False):
             f'<path class="swash" d="{shore}" fill="none" stroke="#ffffff" stroke-width="5" '
             f'stroke-linejoin="round" style="animation-delay:-{delay}s"/>'
         )
-    add(f'<path class="foam" d="{shore}" fill="none" stroke="#ffffff" stroke-width="9" stroke-linejoin="round"/>')
+    add(
+        f'<path class="foam" d="{shore}" fill="none" stroke="#ffffff" stroke-width="9" stroke-linejoin="round"/>'
+    )
     for center in islets:
         ring = island_ring(H, 1.08, n=24, center=center, radius=ISLET_R, top=ISLET_TOP)
         d = "M" + "L".join(f"{x * LOCAL:.0f} {y * LOCAL:.0f}" for x, y, _ in ring) + "Z"
-        add(f'<path class="foam" d="{d}" fill="none" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"/>')
+        add(
+            f'<path class="foam" d="{d}" fill="none" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"/>'
+        )
     add('<g filter="url(#soft-local)" fill="#0c5558" opacity="0.3">')
     for xc, yc in homes:
-        add(f'<rect x="{(xc - 0.6) * LOCAL:.0f}" y="{(yc - 0.85) * LOCAL:.0f}" width="150" height="200"/>')
+        add(
+            f'<rect x="{(xc - 0.6) * LOCAL:.0f}" y="{(yc - 0.85) * LOCAL:.0f}" width="150" height="200"/>'
+        )
     if jetty:
         x0, y0 = (JETTY_X + 0.15) * LOCAL, (JETTY_Y - 0.1) * LOCAL
         add(f'<rect x="{x0:.0f}" y="{y0:.0f}" width="{jetty_length:.0f}" height="50"/>')
@@ -843,21 +1059,32 @@ def build(traits=None, transparent=False):
             z = H + (ISLET_TOP - H) * k / 4
             ring = island_ring(z, n=24, center=center, radius=ISLET_R, top=ISLET_TOP)
             parts.append(solid(P3(ring), mix("#f6e9c8", "#fff7e2", k / 4)))
-        parts += palm(center[0], center[1], 1.3, (0.3, -0.2), 300 + i, bz=ISLET_TOP, size=0.55)
+        parts += palm(
+            center[0], center[1], 1.3, (0.3, -0.2), 300 + i, bz=ISLET_TOP, size=0.55
+        )
         items.append((center[0] + center[1], parts))
     for i, (dx, dy) in enumerate(BUSHES[: round(1 + growth * 5)]):
         x, y = ISLAND[0] + dx * SPREAD, ISLAND[1] + dy * SPREAD
-        items.append((x + y - 0.2, bush(x, y, 200 + i)))
+        items.append((x + y - 0.2, bush(x, y, key, i)))
     for dx, dy, color in parasols:
         x, y = ISLAND[0] + dx, ISLAND[1] + dy
         items.append((x + y + 0.3, parasol(x, y, color)))
     for xc, yc in homes:
-        items.append((xc + yc + 0.25, [f'<use href="#home" transform="{place(xc, yc)}"/>']))
+        items.append(
+            (xc + yc + 0.25, [f'<use href="#home" transform="{place(xc, yc)}"/>'])
+        )
     for x0, x1 in jetty:
-        items.append(((x0 + x1) / 2 + JETTY_Y + 0.25, [f'<use href="#walk" transform="{place(x0, 0)}"/>']))
+        items.append(
+            (
+                (x0 + x1) / 2 + JETTY_Y + 0.25,
+                [f'<use href="#walk" transform="{place(x0, 0)}"/>'],
+            )
+        )
     # The third bungalow sits in front of the jetty and needs a short walkway to it.
     for xc, yc in homes[2:]:
-        items.append((xc + JETTY_Y + 0.9, deck(xc - 0.25, JETTY_Y + 0.5, xc + 0.25, yc - 0.75)))
+        items.append(
+            (xc + JETTY_Y + 0.9, deck(xc - 0.25, JETTY_Y + 0.5, xc + 0.25, yc - 0.75))
+        )
     items.sort(key=lambda item: item[0])
     for _, parts in items:
         add("".join(parts))
@@ -874,15 +1101,3 @@ def build(traits=None, transparent=False):
         )
     add("</svg>")
     return "\n".join(o) + "\n"
-
-
-if __name__ == "__main__":
-    arguments = [argument for argument in sys.argv[1:] if argument != "transparent"]
-    profile = None
-    if len(arguments) > 1:
-        # prs,reviews,issues,stars,forks, each from 0 to 1.
-        profile = dict(zip(DEFAULT, (float(value) for value in arguments[1].split(","))))
-    target = Path(arguments[0])
-    svg = build(profile, "transparent" in sys.argv)
-    target.write_text(svg, encoding="utf-8")
-    print(f"{target.name}: {len(svg.encode())} bytes, {svg.count('<') - svg.count('</')} elements")
