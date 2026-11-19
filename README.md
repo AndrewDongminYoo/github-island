@@ -128,6 +128,8 @@ A scheduled run fails with `Output branch is absent` until one manual dispatch w
 
 ## Playground
 
+Try it at [andrewdongminyoo.github.io/github-island](https://andrewdongminyoo.github.io/github-island/).
+
 `playground/index.html` is a page with a slider for each signal and a choice of growth stage.
 It redraws the island on every change, shows its size against the byte budget, and keeps the settings in the address so that a view can be shared.
 
