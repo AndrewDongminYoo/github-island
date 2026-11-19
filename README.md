@@ -8,8 +8,8 @@ An isometric island, drawn as one animated SVG, that is meant to grow with publi
 
 This is an early prototype.
 The package collects public GitHub activity, reconciles it into a growth state, draws the island for that state, and builds a validated bundle of the image, the state and a manifest, each as a separate command.
-Publishing the bundle every day is not implemented yet, so the image above is an example and not anyone's activity.
-The collection and growth code comes from [github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium), and [the port plan](docs/plans/2026-11-19-pipeline-port.md) lists the steps that are left.
+A daily workflow can publish that bundle to an `output` branch, but the branch does not exist yet, so nothing has been published and the image above is an example, not anyone's activity.
+The pipeline comes from [github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium), and [the port plan](docs/plans/2026-11-19-pipeline-port.md) records the steps and the decisions.
 
 ## How it works
 
@@ -104,6 +104,19 @@ A first state needs exactly 30 completed days, so `START_DAY` is 30 days before 
 `--repository` names the repository that hosts the island; activity inside it is left out of the counts, so publishing the image never feeds the image.
 The growth stage comes from the experience that the state has accumulated and drives the palms.
 Everything else follows the counts of the last 30 days, on a logarithmic scale that reaches 1 at 30 pull requests, 60 reviews, 20 issues, 500 stars and 100 forks.
+
+### Publication
+
+`generate` does the whole run: it reads the `output` branch, collects the days that the published state still needs, grows the state, builds and validates the bundle, and publishes it as one new commit on `output`.
+It never force-pushes. When another run published first, it starts over once from a fresh read.
+
+```bash
+python -m github_island generate --config island.toml --repository OWNER/REPOSITORY --source-commit "$(git rev-parse HEAD)"
+```
+
+The `Daily generation` workflow runs this command once a day and on manual dispatch.
+A scheduled run fails with `Output branch is absent` until one manual dispatch with the `bootstrap` input creates the branch.
+`publish` publishes a bundle that was built separately, and `restore` brings back an earlier published bundle through a new commit, so the history of `output` is never rewritten.
 
 ## Development
 
