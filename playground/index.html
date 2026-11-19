@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>GitHub Island playground</title>
+    <meta
+      name="description"
+      content="Move the activity signals and watch the island change. The page runs the project's own Python renderer in the browser."
+    />
+    <style>
+      :root {
+        --page: #f1eee6;
+        --panel: #fbfaf6;
+        --stage: #e9e5da;
+        --ink: #2b2925;
+        --soft: #6b665b;
+        --line: #d9d3c4;
+        --accent: #14867f;
+        --accent-ink: #ffffff;
+        --track: #d6d0c1;
+        --warn: #b4532a;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page: #0d1117;
+          --panel: #151b23;
+          --stage: #0d1117;
+          --ink: #e6edf3;
+          --soft: #9aa5b1;
+          --line: #2a323c;
+          --accent: #3fc1b8;
+          --accent-ink: #06201f;
+          --track: #303a45;
+          --warn: #f0a070;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--ink);
+        font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      header { padding: 28px 24px 8px; max-width: 1320px; margin: 0 auto; }
+      h1 { margin: 0; font: italic 400 40px/1.05 Georgia, "Times New Roman", serif; }
+      header p { margin: 8px 0 0; color: var(--soft); max-width: 62ch; }
+      a { color: var(--accent); }
+      main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        gap: 20px;
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 16px 24px 40px;
+        align-items: start;
+      }
+      .stage {
+        position: sticky;
+        top: 16px;
+        background: var(--stage);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        min-height: 320px;
+      }
+      .stage img { display: block; width: 100%; height: auto; }
+      .status { margin: 0; padding: 120px 16px; text-align: center; color: var(--soft); }
+      .status.error { color: var(--warn); }
+      .meter { display: flex; align-items: center; gap: 12px; padding: 10px 6px 2px; color: var(--soft); font-size: 13px; }
+      .meter .bar { flex: 1; height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+      .meter .bar span { display: block; height: 100%; width: 0; background: var(--accent); }
+      .meter .bar.over span { background: var(--warn); }
+      .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+      .panel h2 { margin: 0 0 10px; font-size: 12px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--soft); }
+      .panel section + section { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+      button, .button {
+        font: inherit;
+        color: var(--ink);
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 5px 12px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+      button:hover, .button:hover { border-color: var(--accent); }
+      button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+      button:focus-visible, .button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .signal + .signal { margin-top: 14px; }
+      .signal .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+      .signal label { font-weight: 600; }
+      .signal output { color: var(--soft); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .signal small { display: block; color: var(--soft); font-size: 12.5px; }
+      input[type="range"] { width: 100%; margin: 4px 0 2px; accent-color: var(--accent); }
+      .row { display: flex; gap: 8px; align-items: center; }
+      input[type="text"] {
+        flex: 1;
+        min-width: 0;
+        font: inherit;
+        color: var(--ink);
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 6px 10px;
+      }
+      .check { display: flex; gap: 8px; align-items: center; margin-top: 10px; color: var(--soft); }
+      footer { max-width: 1320px; margin: 0 auto; padding: 0 24px 40px; color: var(--soft); font-size: 13px; }
+      @media (max-width: 900px) {
+        main { grid-template-columns: 1fr; padding: 12px 16px 32px; }
+        header { padding: 22px 16px 6px; }
+        footer { padding: 0 16px 32px; }
+        .stage { position: static; }
+        h1 { font-size: 32px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>GitHub Island playground</h1>
+      <p>
+        Move the signals and watch the island change. This page runs the same Python renderer that
+        draws the published image of
+        <a href="https://github.com/AndrewDongminYoo/github-island">github-island</a>, so what you
+        see here is what a README would show.
+      </p>
+    </header>
+    <main>
+      <div class="stage">
+        <p class="status" id="status" role="status">Loading the Python runtime…</p>
+        <img id="island" alt="The island drawn for the signals on this page" hidden />
+        <div class="meter" id="meter" hidden>
+          <span id="bytes"></span>
+          <div class="bar" id="bar"><span></span></div>
+          <span>200 kB budget</span>
+        </div>
+      </div>
+      <form class="panel" id="controls" autocomplete="off">
+        <section>
+          <h2>Presets</h2>
+          <div class="chips" id="presets"></div>
+        </section>
+        <section>
+          <h2>Growth stage</h2>
+          <div class="chips" id="stages" role="group" aria-label="Growth stage"></div>
+          <small class="check">The stage comes from experience earned over time. It never goes down, and it sets the palms.</small>
+        </section>
+        <section>
+          <h2>Last 30 days</h2>
+          <div id="signals"></div>
+        </section>
+        <section>
+          <h2>Island</h2>
+          <div class="row">
+            <input type="text" id="key" aria-label="Island key" maxlength="60" />
+            <button type="button" id="shuffle">Shuffle</button>
+          </div>
+          <small class="check">The key seeds the island's shape. A published island uses the account's ID.</small>
+          <label class="check"><input type="checkbox" id="poster" /> Poster variant with a backdrop and a title</label>
+        </section>
+        <section>
+          <div class="chips">
+            <a class="button" id="download" download="island.svg" href="#">Download SVG</a>
+            <button type="button" id="copy">Copy link</button>
+          </div>
+        </section>
+      </form>
+    </main>
+    <footer>
+      Signal values run from 0 to 1 on a logarithmic scale. The count next to each slider is the
+      30-day total that gives that value. Rendering happens in your browser; nothing is sent
+      anywhere.
+    </footer>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js"></script>
+    <script>
+      const SIGNALS = [
+        ["prs", "Pull requests", "Sea animals: fish, then turtles, rays, dolphins, a whale shark"],
+        ["reviews", "Reviews", "Visitors: float rings, a canoe, parasols, bungalows"],
+        ["outside", "Outside contributions", "Visitors too. The larger of this and reviews counts"],
+        ["issues", "Issues", "Reefs on the seabed"],
+        ["stars", "Stars", "Glints on the water"],
+        ["forks", "Forks", "Satellite islets"],
+      ];
+      const PRESETS = {
+        Quiet: { stage: "seed", prs: 0.1, reviews: 0, outside: 0, issues: 0.2, stars: 0.2, forks: 0 },
+        Builder: { stage: "mature", prs: 1, reviews: 0.1, outside: 0, issues: 0.4, stars: 0.4, forks: 0 },
+        Reviewer: { stage: "grove", prs: 0.3, reviews: 1, outside: 0.3, issues: 0.5, stars: 0.3, forks: 0.34 },
+        Contributor: { stage: "grove", prs: 0.5, reviews: 0, outside: 0.75, issues: 0.4, stars: 0.5, forks: 0.34 },
+        Everything: { stage: "sanctuary", prs: 1, reviews: 1, outside: 1, issues: 1, stars: 1, forks: 1 },
+      };
+      const BUDGET = 200 * 1024;
+      const state = { ...PRESETS.Contributor, key: "example", poster: false };
+      const $ = (id) => document.getElementById(id);
+      let draw = null;
+      let caps = {};
+      let stages = [];
+      let pending = false;
+      let currentUrl = null;
+
+      function readHash() {
+        const params = new URLSearchParams(location.hash.slice(1));
+        for (const [name] of SIGNALS) {
+          const value = Number(params.get(name));
+          if (params.has(name) && value >= 0 && value <= 1) state[name] = value;
+        }
+        if (params.has("stage")) state.stage = params.get("stage");
+        if (params.has("key")) state.key = params.get("key").slice(0, 60);
+        state.poster = params.get("poster") === "1";
+      }
+
+      function writeHash() {
+        const params = new URLSearchParams();
+        params.set("stage", state.stage);
+        for (const [name] of SIGNALS) params.set(name, state[name].toFixed(2));
+        params.set("key", state.key);
+        if (state.poster) params.set("poster", "1");
+        history.replaceState(null, "", "#" + params.toString());
+      }
+
+      function countFor(name, value) {
+        // Inverse of the trait curve: value = log1p(count) / log1p(cap).
+        return Math.round(Math.expm1(value * Math.log1p(caps[name])));
+      }
+
+      function buildControls() {
+        for (const name of Object.keys(PRESETS)) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = name;
+          button.addEventListener("click", () => {
+            Object.assign(state, PRESETS[name]);
+            syncControls();
+            schedule();
+          });
+          $("presets").append(button);
+        }
+        for (const name of stages) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = name;
+          button.dataset.stage = name;
+          button.addEventListener("click", () => {
+            state.stage = name;
+            syncControls();
+            schedule();
+          });
+          $("stages").append(button);
+        }
+        for (const [name, label, hint] of SIGNALS) {
+          const box = document.createElement("div");
+          box.className = "signal";
+          box.innerHTML =
+            `<div class="head"><label for="s-${name}">${label}</label><output id="o-${name}" for="s-${name}"></output></div>` +
+            `<input type="range" id="s-${name}" min="0" max="1" step="0.01" />` +
+            `<small>${hint}</small>`;
+          $("signals").append(box);
+          box.querySelector("input").addEventListener("input", (event) => {
+            state[name] = Number(event.target.value);
+            syncControls();
+            schedule();
+          });
+        }
+        $("key").addEventListener("input", (event) => {
+          state.key = event.target.value;
+          schedule();
+        });
+        $("shuffle").addEventListener("click", () => {
+          state.key = "island-" + Math.random().toString(36).slice(2, 8);
+          syncControls();
+          schedule();
+        });
+        $("poster").addEventListener("change", (event) => {
+          state.poster = event.target.checked;
+          schedule();
+        });
+        $("copy").addEventListener("click", async () => {
+          writeHash();
+          try {
+            await navigator.clipboard.writeText(location.href);
+            $("copy").textContent = "Copied";
+          } catch {
+            $("copy").textContent = "Copy from the address bar";
+          }
+          setTimeout(() => ($("copy").textContent = "Copy link"), 1600);
+        });
+      }
+
+      function syncControls() {
+        if (!stages.includes(state.stage)) state.stage = stages[0];
+        for (const button of $("stages").children) {
+          button.setAttribute("aria-pressed", String(button.dataset.stage === state.stage));
+        }
+        for (const [name] of SIGNALS) {
+          $("s-" + name).value = state[name];
+          $("o-" + name).textContent = `${state[name].toFixed(2)} · ≈ ${countFor(name, state[name])}`;
+        }
+        if ($("key").value !== state.key) $("key").value = state.key;
+        $("poster").checked = state.poster;
+      }
+
+      function schedule() {
+        if (pending || !draw) return;
+        pending = true;
+        requestAnimationFrame(() => {
+          pending = false;
+          render();
+        });
+      }
+
+      function render() {
+        let svg;
+        try {
+          svg = draw(JSON.stringify(state));
+        } catch (error) {
+          fail("The renderer raised an error: " + error.message);
+          return;
+        }
+        const blob = new Blob([svg], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(blob);
+        $("island").src = url;
+        $("download").href = url;
+        if (currentUrl) URL.revokeObjectURL(currentUrl);
+        currentUrl = url;
+        $("status").hidden = true;
+        $("island").hidden = false;
+        $("meter").hidden = false;
+        $("bytes").textContent = (blob.size / 1024).toFixed(1) + " kB";
+        $("bar").classList.toggle("over", blob.size > BUDGET);
+        $("bar").firstElementChild.style.width = Math.min(100, (blob.size / BUDGET) * 100) + "%";
+        writeHash();
+      }
+
+      function fail(message) {
+        $("status").textContent = message;
+        $("status").classList.add("error");
+        $("status").hidden = false;
+      }
+
+      async function boot() {
+        readHash();
+        const pyodide = await loadPyodide();
+        $("status").textContent = "Loading the renderer…";
+        const modules = await (await fetch("py/modules.json")).json();
+        pyodide.FS.mkdirTree("/app/github_island");
+        for (const name of modules) {
+          const response = await fetch(`py/github_island/${name}.py`);
+          if (!response.ok) throw new Error(`Cannot load ${name}.py`);
+          pyodide.FS.writeFile(`/app/github_island/${name}.py`, await response.text());
+        }
+        pyodide.runPython(`
+import json
+import sys
+
+sys.path.insert(0, "/app")
+from github_island.growth import CAPS
+from github_island.render import STAGE_GROWTH, render_scene
+
+SIGNALS = ("prs", "reviews", "outside", "issues", "stars", "forks")
+
+
+def draw(payload):
+    values = json.loads(payload)
+    traits = {name: float(values[name]) for name in SIGNALS}
+    traits["growth"] = STAGE_GROWTH[values["stage"]]
+    return render_scene(traits, transparent=not values["poster"], key=str(values["key"]))
+`);
+        caps = JSON.parse(pyodide.runPython("json.dumps(CAPS)"));
+        stages = JSON.parse(pyodide.runPython("json.dumps(list(STAGE_GROWTH))"));
+        draw = pyodide.globals.get("draw");
+        buildControls();
+        syncControls();
+        render();
+      }
+
+      boot().catch((error) => fail("The playground could not start: " + error.message));
+    </script>
+  </body>
+</html>
