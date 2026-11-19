@@ -97,6 +97,7 @@ python -m github_island validate --bundle-dir bundle
 
 The validator is an allowlist with budgets.
 It accepts only the elements, attributes, classes and stylesheet that the renderer writes, refuses script and anything that reaches outside the file, checks that every reference resolves inside the file, and bounds the size, the element count, the depth and the animation count.
+Every attribute has a grammar of its own, so a keyword such as `click` on an animation or a function such as `URL(...)` on a paint cannot pass.
 It does not parse geometry, so it cannot tell whether a path draws the right shape.
 
 A first state needs exactly 30 completed days, so `START_DAY` is 30 days before today in UTC.
