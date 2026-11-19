@@ -27,13 +27,16 @@ The island is always the same island.
 What changes with activity is who comes to it.
 Each signal is a number from 0 to 1.
 
-| Signal        | What it brings                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------------------- |
-| Pull requests | Sea animals, larger with more activity: fish, then turtles, rays, a pod of dolphins, a whale shark  |
-| Reviews       | Visitors: float rings, then a canoe, parasols with sunbathers, and up to three bungalows on a jetty |
-| Issues        | Reefs on the seabed                                                                                 |
-| Stars         | Glints on the water                                                                                 |
-| Forks         | Satellite islets around the island                                                                  |
+| Signal                           | What it brings                                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Pull requests                    | Sea animals, larger with more activity: fish, then turtles, rays, a pod of dolphins, a whale shark  |
+| Reviews or outside contributions | Visitors: float rings, then a canoe, parasols with sunbathers, and up to three bungalows on a jetty |
+| Issues                           | Reefs on the seabed                                                                                 |
+| Stars                            | Glints on the water                                                                                 |
+| Forks                            | Satellite islets around the island                                                                  |
+
+An outside contribution is a pull request or an issue opened in a public repository that the account does not own, which includes a repository of an organization.
+Visitors follow whichever of the two signals is larger, because both are work done for someone else.
 
 The number and height of the palms follow overall growth, which the prototype takes as the mean of pull requests, reviews and issues.
 
@@ -103,7 +106,9 @@ It does not parse geometry, so it cannot tell whether a path draws the right sha
 A first state needs exactly 30 completed days, so `START_DAY` is 30 days before today in UTC.
 `--repository` names the repository that hosts the island; activity inside it is left out of the counts, so publishing the image never feeds the image.
 The growth stage comes from the experience that the state has accumulated and drives the palms.
-Everything else follows the counts of the last 30 days, on a logarithmic scale that reaches 1 at 30 pull requests, 60 reviews, 20 issues, 500 stars and 100 forks.
+Everything else follows the counts of the last 30 days, on a logarithmic scale that reaches 1 at 30 pull requests, 60 reviews, 20 issues, 10 outside contributions, 500 stars and 100 forks.
+Outside contributions are rare, so their scale is short: five of them in 30 days already bring a bungalow.
+The `scene` command takes no outside value; raise the review value there to see visitors.
 
 ### Publication
 
