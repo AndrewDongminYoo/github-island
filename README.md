@@ -1,14 +1,17 @@
 # github-island
 
-An isometric island, drawn as one animated SVG, that is meant to grow with public GitHub activity.
+An isometric island, drawn as one animated SVG, that grows with public GitHub activity.
 
-![An isometric island with palms, parasols, a stilt bungalow, a canoe and sea animals in translucent water](examples/island.svg)
+<img src="https://raw.githubusercontent.com/AndrewDongminYoo/github-island/output/island.svg" alt="Animated isometric island grown from public GitHub activity, with palms, sea animals and visitors in translucent water">
+
+The image above is live: it is the file that the daily workflow publishes on the [`output` branch](https://github.com/AndrewDongminYoo/github-island/tree/output), next to its `state.json` and `manifest.json`.
 
 ## Status
 
-This is an early prototype.
-The package collects public GitHub activity, reconciles it into a growth state, draws the island for that state, and builds a validated bundle of the image, the state and a manifest, each as a separate command.
-A daily workflow can publish that bundle to an `output` branch, but the branch does not exist yet, so nothing has been published and the image above is an example, not anyone's activity.
+This is an early prototype that runs end to end.
+The package collects public GitHub activity, reconciles it into a growth state, draws the island for that state, validates the image, and publishes the image, the state and a manifest together.
+The first publication was a manual bootstrap run on 2026-11-19, recorded in [the publication note](docs/notes/2026-11-19-first-publication.md).
+Scheduled runs have not been observed yet, so nothing here claims that they start on time.
 The pipeline comes from [github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium), and [the port plan](docs/plans/2026-11-19-pipeline-port.md) records the steps and the decisions.
 
 ## How it works
