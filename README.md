@@ -151,6 +151,8 @@ ruff check src tests tools
 ruff format --check src tests tools
 ```
 
+[CONTRIBUTING.md](CONTRIBUTING.md) has the rules for a change and for a pull request.
+
 ## Known limits
 
 - The viewpoint is fixed. An image in a README cannot run script or receive pointer input, so there is no camera control, no interaction and no physics.
