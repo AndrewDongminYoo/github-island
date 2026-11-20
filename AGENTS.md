@@ -16,17 +16,9 @@ Draw an isometric island as one animated SVG, and grow it from public GitHub act
 ## Boundaries
 
 - The repository has a read-only public collector, local growth reconciliation, a renderer for a growth state, an SVG validator, offline bundle build and validation, a `publish` command, a `generate` command that publishes with one conflict retry, a manual `restore` command, a guarded `generate.yml` workflow, and example scenes. Live output was first published by a manual bootstrap on 2026-11-19 ([publication note](docs/notes/2026-11-19-first-publication.md)); the first scheduled run, on 2026-11-20, succeeded 7 hours after its cron time ([scheduled run note](docs/notes/2026-11-20-first-scheduled-run.md)), so do not claim that scheduled runs start on time.
-- Keep source and documentation on `main`; generated images and growth state go together on `output`. Preserve output history: never force-push generated state or silently reset an existing island.
-- When the renderer starts to write a new element, attribute, class or style, add it to the validator's allowlist in the same change, with a test that the old output is still refused where it should be.
-- Collection, scoring and the state schema started as copies of github-terrarium version 1 and have one addition: each day also counts `outside`, the pull requests and issues opened in repositories the account does not own. A snapshot or a state from github-terrarium is therefore not valid here. Treat incomplete collection as failure, never as zero activity, and keep repeated runs from earning duplicate growth.
-- The image must stay one self-contained SVG: no script, no external reference, nothing that needs pointer input.
-- Keep rendering deterministic. The same traits and the same key must give the same bytes, and nothing in the renderer may read the clock, the network or the file system.
-- The transparent variant carries no text. Titles and dates belong in the README or in metadata.
-- Regenerate `examples/` with `python tools/examples.py` whenever the renderer output changes; a test compares them.
-- Keep technical documentation and identifiers in English.
+- Keep source and documentation on `main`; generated images and growth state go together on `output`.
+- Follow [CONTRIBUTING.md](CONTRIBUTING.md) for the rules on the image, the validator, the examples, activity and state, the `output` branch, and language.
 
 ## Verification
 
-Run `python -m unittest discover -s tests -v`, `ruff check src tests tools`, and `ruff format --check src tests tools` in a Python 3.12 environment with `requirements-dev.txt` and the package installed.
-A passing suite says the SVG is well formed, self-contained and within budget; it does not say the scene looks right.
-For that, render `preview.html` in a browser.
+Run the commands in the README's Development section in a Python 3.12 environment, as [CONTRIBUTING.md](CONTRIBUTING.md#check-your-change) describes, and look at the scene in a browser before you call a renderer change done.
