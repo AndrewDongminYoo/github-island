@@ -49,3 +49,5 @@ The state covers 94 public repositories.
 
 - No scheduled run had happened when this note was written. Whether the schedule starts, and how late, is unknown.
 - A second run that updates an existing `output` branch has not happened on GitHub. Only the tests with local remotes cover that path.
+
+Both points were answered on 2026-11-20 in [the first scheduled run note](2026-11-20-first-scheduled-run.md).

@@ -127,7 +127,8 @@ The `Playground` workflow builds the same site and deploys it to GitHub Pages on
 This is an early prototype that runs end to end.
 The package collects public GitHub activity, reconciles it into a growth state, draws the island for that state, validates the image, and publishes the image, the state and a manifest together.
 The first publication was a manual bootstrap run on 2026-11-19, recorded in [the publication note](docs/notes/2026-11-19-first-publication.md).
-Scheduled runs have not been observed yet, so nothing here claims that they start on time.
+The first scheduled run, on 2026-11-20, started 7 hours after its cron time and updated the image; [its note](docs/notes/2026-11-20-first-scheduled-run.md) has the details.
+So the daily image does not arrive at a fixed time.
 The pipeline comes from [github-terrarium](https://github.com/AndrewDongminYoo/github-terrarium), and [the port plan](docs/plans/2026-11-19-pipeline-port.md) records the steps and the decisions.
 
 ## How it works
