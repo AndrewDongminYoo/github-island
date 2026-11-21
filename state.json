@@ -1,9 +1,9 @@
 {
   "current_traits": {
     "forks": 38,
-    "issues": 254,
+    "issues": 255,
     "outside": 5,
-    "prs": 876,
+    "prs": 878,
     "reviews": 0,
     "stars": 137
   },
@@ -319,6 +319,16 @@
       "reviews": 0
     },
     "2026-11-20": {
+      "activity_xp_awarded": 69,
+      "issues": 3,
+      "new_fork_units": 0,
+      "new_star_units": 0,
+      "outside": 0,
+      "popularity_xp_awarded": 0,
+      "prs": 13,
+      "reviews": 0
+    },
+    "2026-11-21": {
       "activity_xp_awarded": 0,
       "issues": null,
       "new_fork_units": 0,
@@ -329,8 +339,8 @@
       "reviews": null
     }
   },
-  "last_complete_activity_day": "2026-11-19",
-  "last_popularity_observation_day": "2026-11-20",
+  "last_complete_activity_day": "2026-11-20",
+  "last_popularity_observation_day": "2026-11-21",
   "recovery_target": null,
   "repository_watermarks": {
     "R_kgDOGGcHxw": {
