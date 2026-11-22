@@ -1,14 +1,14 @@
 {
-  "complete_activity_day": "2026-11-20",
+  "complete_activity_day": "2026-11-21",
   "manifest_version": 1,
   "renderer_version": 1,
   "schema_version": 1,
   "scoring_version": 1,
   "sha256": {
-    "island.svg": "920381967fc36cd43d1b8a95e6e6125af93a29d8a2ae63a14e15afde5dc741a3",
-    "state.json": "9da7884878930c3fa3bd773451b206989a34b741b28d8b7de0342a051647c995"
+    "island.svg": "93b45b322b8f097bed3015436752f823ccd0bc667a637fb18bad2ca58698c5aa",
+    "state.json": "a9058d7e70d72223431301631374fdd10e5c5c2c516196930c06b345c6a88650"
   },
   "source_commit": "4aa573436d9c2753cc0f9ce66e5df9be4d4ba089",
-  "stock_observation_day": "2026-11-21",
+  "stock_observation_day": "2026-11-22",
   "subject_id": "MDQ6VXNlcjgyOTk5NzE1"
 }
