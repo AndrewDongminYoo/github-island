@@ -534,11 +534,81 @@ HOMES = [(10.9, 5.8), (9.3, 4.3), (9.3, 7.55)]
 JETTY_X, JETTY_Y, JETTY_SEGMENT = 8.0, 5.55, 1.075
 SHADOW = (1.0, -0.55)  # offset of a deck's shadow on the seabed
 DEFAULT = {"prs": 0.5, "reviews": 0.5, "issues": 0.5, "stars": 0.5, "forks": 0.34}
+# The values that a signal must pass to add each animal or visitor.
+TURTLE_CUTS = (0.2, 0.5)
+RAY_CUTS = (0.4, 0.7)
+DOLPHIN_CUT = 0.6
+WHALE_CUT = 0.85
+RING_CUTS = (0.15, 0.35, 0.55)
+CANOE_CUT = 0.3
+PARASOL_CUTS = (0.45, 0.6, 0.8)
+HOME_CUTS = (0.6, 0.75, 0.9)
+# Every value where the scene changes, for marks on a slider.
+CUTS = {
+    "prs": sorted({*TURTLE_CUTS, *RAY_CUTS, DOLPHIN_CUT, WHALE_CUT}),
+    "visitors": sorted({*RING_CUTS, CANOE_CUT, *PARASOL_CUTS, *HOME_CUTS}),
+}
 
 
 def steps(value, *cuts):
     """Count the thresholds that `value` has passed."""
     return sum(value > cut for cut in cuts)
+
+
+def clear_of(x, y, places, gap):
+    return all(math.hypot(x - p[0], y - p[1]) > gap for p in places)
+
+
+def school_sizes(prs):
+    """Return the number of fish in each of the three schools."""
+    return 3 + round(6 * prs), round(6 * prs), round(4 * prs)
+
+
+def plan(traits=None):
+    """Choose what the scene holds. `render_scene` draws this plan and `census` counts it."""
+    traits = {**DEFAULT, **(traits or {})}
+    growth = traits.get(
+        "growth", (traits["prs"] + traits["reviews"] + traits["issues"]) / 3
+    )
+    visitors = max(traits["reviews"], traits.get("outside", 0.0))
+    homes = HOMES[: steps(visitors, *HOME_CUTS)]
+    return {
+        "canoe": visitors > CANOE_CUT,
+        "glints": round(4 + traits["stars"] * 20),
+        "growth": growth,
+        "homes": homes,
+        "islets": ISLETS[: round(traits["forks"] * len(ISLETS))],
+        "palms": 1 + round(growth * 5),
+        "parasols": PARASOLS[: steps(visitors, *PARASOL_CUTS)],
+        "reefs": [
+            reef
+            for reef in REEFS[: round(2 + traits["issues"] * 8)]
+            if clear_of(*reef, homes, 1.7)
+        ],
+        "rings": RINGS[: steps(visitors, *RING_CUTS)],
+        "traits": traits,
+    }
+
+
+def census(traits=None):
+    """Count what `render_scene` draws for `traits`, for a page that describes the scene."""
+    scene = plan(traits)
+    prs = scene["traits"]["prs"]
+    return {
+        "bungalows": len(scene["homes"]),
+        "canoe": scene["canoe"],
+        "dolphins": prs > DOLPHIN_CUT,
+        "fish": sum(school_sizes(prs)),
+        "glints": scene["glints"],
+        "islets": len(scene["islets"]),
+        "palms": scene["palms"],
+        "parasols": len(scene["parasols"]),
+        "rays": steps(prs, *RAY_CUTS),
+        "reefs": len(scene["reefs"]),
+        "rings": len(scene["rings"]),
+        "turtles": steps(prs, *TURTLE_CUTS),
+        "whale": prs > WHALE_CUT,
+    }
 
 
 def lane(radius, clockwise=True):
@@ -557,10 +627,11 @@ def wildlife(prs, key):
     """Return swimmers and their seabed shadows. Larger animals join as `prs` grows."""
     rnd = random.Random(f"{key}:wildlife")
     bodies, shadows = [], []
+    sizes = school_sizes(prs)
     schools = [
-        (lane(4.7), 34, 3 + round(6 * prs), "#1d6f7a"),
-        (lane(5.3, False), 46, round(6 * prs), "#235f86"),
-        (ellipse_path(600, 1090, 110, 55), 12, round(4 * prs), "#1d6f7a"),
+        (lane(4.7), 34, sizes[0], "#1d6f7a"),
+        (lane(5.3, False), 46, sizes[1], "#235f86"),
+        (ellipse_path(600, 1090, 110, 55), 12, sizes[2], "#1d6f7a"),
     ]
     for path, duration, count, color in schools:
         for i in range(count):
@@ -569,15 +640,15 @@ def wildlife(prs, key):
                 f'fill="{color}" opacity="0.75"/>'
             )
             bodies.append(swim(path, duration, i * 0.45 + rnd.uniform(0, 0.2), fish))
-    for i in range(steps(prs, 0.2, 0.5)):
+    for i in range(steps(prs, *TURTLE_CUTS)):
         bodies.append(
             swim(lane((4.55, 5.15)[i], i == 0), (52, 64)[i], (32, 13)[i], TURTLE)
         )
-    for i in range(steps(prs, 0.4, 0.7)):
+    for i in range(steps(prs, *RAY_CUTS)):
         bodies.append(
             swim(lane((5.0, 4.4)[i], i == 1), (70, 58)[i], (33, 40)[i], RAY_BODY)
         )
-    if prs > 0.6:
+    if prs > DOLPHIN_CUT:
         for i in range(3):
             place = f"translate({-i * 20} {(-36, 32, 0)[i]})"
             path, begin = lane(4.9, False), 8.4 + i * 1.1
@@ -592,7 +663,7 @@ def wildlife(prs, key):
                     f'<path d="{DOLPHIN_OUTLINE}" transform="{place}"/>',
                 )
             )
-    if prs > 0.85:
+    if prs > WHALE_CUT:
         spots = ""
         for _ in range(30):
             x = rnd.uniform(-70, 105)
@@ -732,27 +803,22 @@ def render_scene(traits=None, transparent=False, key="example", label=GENERIC_LA
     `key` seeds every random choice, so each key gets its own island and the
     same key always gets the same one.
     """
-    traits = {**DEFAULT, **(traits or {})}
-    growth = traits.get(
-        "growth", (traits["prs"] + traits["reviews"] + traits["issues"]) / 3
-    )
-    visitors = max(traits["reviews"], traits.get("outside", 0.0))
+    scene = plan(traits)
+    traits = scene["traits"]
+    growth = scene["growth"]
     rnd = random.Random(f"{key}:scene")
-    homes = HOMES[: steps(visitors, 0.6, 0.75, 0.9)]
-    rings = RINGS[: steps(visitors, 0.15, 0.35, 0.55)]
-    parasols = PARASOLS[: steps(visitors, 0.45, 0.6, 0.8)]
-    canoe = visitors > 0.3
-    islets = ISLETS[: round(traits["forks"] * len(ISLETS))]
-    palms = 1 + round(growth * 5)
+    homes = scene["homes"]
+    rings = scene["rings"]
+    parasols = scene["parasols"]
+    canoe = scene["canoe"]
+    islets = scene["islets"]
+    palms = scene["palms"]
     bodies, shadows = wildlife(traits["prs"], key)
     jetty = [
         (JETTY_X + i * JETTY_SEGMENT, JETTY_X + (i + 1) * JETTY_SEGMENT)
         for i in range(2 if homes else 0)
     ]
     jetty_length = len(jetty) * JETTY_SEGMENT * LOCAL
-
-    def clear_of(x, y, places, gap):
-        return all(math.hypot(x - p[0], y - p[1]) > gap for p in places)
 
     o = []
     add = o.append
@@ -914,12 +980,7 @@ def render_scene(traits=None, transparent=False, key="example", label=GENERIC_LA
         add(f'<rect x="{x0:.0f}" y="{y0:.0f}" width="{jetty_length:.0f}" height="50"/>')
     add("</g>")
     palette = ["#ff8a7a", "#ffb347", "#b07cff", "#5fd3a8", "#ff6fb5", "#ffd95e"]
-    reefs = [
-        reef
-        for reef in REEFS[: round(2 + traits["issues"] * 8)]
-        if clear_of(*reef, homes, 1.7)
-    ]
-    for x, y in reefs:
+    for x, y in scene["reefs"]:
         cx, cy = x * LOCAL, y * LOCAL
         add(
             f'<ellipse cx="{cx + 14:.0f}" cy="{cy - 8:.0f}" rx="52" ry="40" fill="#16484a" opacity="0.2"/>'
@@ -1092,7 +1153,7 @@ def render_scene(traits=None, transparent=False, key="example", label=GENERIC_LA
             )
         )
     add("</g>")
-    for index in range(round(4 + traits["stars"] * 20)):
+    for index in range(scene["glints"]):
         while True:
             x, y = rnd.uniform(0.4, W - 0.4), rnd.uniform(0.4, W - 0.4)
             if math.hypot(x - ISLAND[0], y - ISLAND[1]) > ISLAND_R * 0.93:

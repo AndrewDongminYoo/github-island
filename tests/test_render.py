@@ -2,7 +2,7 @@ import re
 import unittest
 import xml.etree.ElementTree as ET
 
-from github_island.render import DEFAULT, render_scene
+from github_island.render import CUTS, DEFAULT, census, render_scene
 
 NS = "{http://www.w3.org/2000/svg}"
 # The byte budget that github-terrarium enforces on its published image.
@@ -85,6 +85,33 @@ class RenderTests(unittest.TestCase):
             scene(forks=0).count('class="foam"'), scene(forks=1).count('class="foam"')
         )
         self.assertLess(uses(scene(stars=0), "k"), uses(scene(stars=1), "k"))
+
+    def test_census_counts_what_the_scene_draws(self):
+        for values in (
+            (0, 0, 0, 0, 0),
+            (0.5, 0.5, 0.5, 0.5, 0.34),
+            (0.75, 0.8, 1, 1, 1),
+        ):
+            traits = dict(zip(DEFAULT, values))
+            with self.subTest(traits=traits):
+                svg, counts = render_scene(traits), census(traits)
+                self.assertEqual(counts["bungalows"], uses(svg, "home"))
+                self.assertEqual(counts["rings"], svg.count('class="bob'))
+                self.assertEqual(counts["glints"], uses(svg, "k"))
+                self.assertEqual(
+                    counts["whale"], 'fill="#ffffff" opacity="0.65"' in svg
+                )
+
+    def test_census_rounds_like_the_renderer(self):
+        # Python rounds an exact half to the even neighbour: 2.5 gives 2, 4.5 gives 4.
+        self.assertEqual(census({"growth": 0.5})["palms"], 3)
+        self.assertEqual(census({"prs": 0.75})["fish"], 3 + 4 + 4 + 3)
+
+    def test_slider_marks_are_the_scene_thresholds(self):
+        self.assertEqual(CUTS["prs"], [0.2, 0.4, 0.5, 0.6, 0.7, 0.85])
+        self.assertEqual(
+            CUTS["visitors"], [0.15, 0.3, 0.35, 0.45, 0.55, 0.6, 0.75, 0.8, 0.9]
+        )
 
     def test_transparent_variant_has_no_backdrop_and_no_text(self):
         clear = scene(transparent=True)

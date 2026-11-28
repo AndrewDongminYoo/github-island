@@ -1256,21 +1256,12 @@
         Everything: { stage: "sanctuary", prs: 1, reviews: 1, outside: 1, issues: 1, stars: 1, forks: 1 },
       };
       const BUDGET = 200 * 1024;
-      const TICKS = {
-        prs: [0.2, 0.4, 0.5, 0.6, 0.7, 0.85],
-        reviews: [0.15, 0.3, 0.35, 0.45, 0.55, 0.6, 0.75, 0.8, 0.9],
-        outside: [0.15, 0.3, 0.35, 0.45, 0.55, 0.6, 0.75, 0.8, 0.9],
-      };
-      const HOMES = [[10.9, 5.8], [9.3, 4.3], [9.3, 7.55]];
-      const REEFS = [
-        [10.9, 6.2], [6.0, 11.0], [9.6, 9.0], [1.0, 6.0], [2.4, 8.9],
-        [6.2, 0.9], [1.2, 1.4], [8.9, 2.6], [3.6, 10.9], [9.0, 11.0],
-      ];
       const state = { ...PRESETS.Contributor, key: "example", poster: false };
       const $ = (id) => document.getElementById(id);
       let draw = null;
+      let censusOf = null;
       let caps = {};
-      let stageGrowth = {};
+      let cuts = {};
       let stages = [];
       let pending = false;
       let currentUrl = null;
@@ -1286,18 +1277,6 @@
       let accountEdited = false;
       const t = (key, values) => translate(language, key, values);
 
-      function stepsPassed(value, cuts) {
-        return cuts.filter((cut) => value > cut).length;
-      }
-
-      // Python's round() sends an exact half to the even neighbour; the counts must match the renderer.
-      function pyRound(value) {
-        const floor = Math.floor(value);
-        const rest = value - floor;
-        if (rest !== 0.5) return rest < 0.5 ? floor : floor + 1;
-        return floor % 2 === 0 ? floor : floor + 1;
-      }
-
       function matchedPreset() {
         for (const [name, preset] of Object.entries(PRESETS)) {
           if (preset.stage !== state.stage) continue;
@@ -1307,10 +1286,10 @@
       }
 
       function updateEcology() {
-        if (!stages.length) return;
-        const growth = stageGrowth[state.stage] ?? 0.5;
-        const palms = 1 + pyRound(growth * 5);
-        $("palm-badge").textContent = t("eco.palms", { count: palms });
+        if (!censusOf) return;
+        // The renderer counts the scene, so the cards cannot drift from the image.
+        const scene = JSON.parse(censusOf(JSON.stringify(state)));
+        $("palm-badge").textContent = t("eco.palms", { count: scene.palms });
 
         const presetName = matchedPreset();
         if (accountResult && !accountEdited) {
@@ -1322,39 +1301,25 @@
         $("active-key").textContent = `#${state.key || "—"}`;
         $("surfaces").classList.toggle("disabled", state.poster);
 
-        $("eco-canopy").textContent = `${t("eco.palms", { count: palms })} · ${t("stage." + state.stage)}`;
+        $("eco-canopy").textContent = `${t("eco.palms", { count: scene.palms })} · ${t("stage." + state.stage)}`;
 
-        const prs = state.prs;
-        const fish = 3 + pyRound(6 * prs) + pyRound(6 * prs) + pyRound(4 * prs);
-        const marine = [t("eco.fish", { count: fish })];
-        const turtles = stepsPassed(prs, [0.2, 0.5]);
-        const rays = stepsPassed(prs, [0.4, 0.7]);
-        if (turtles) marine.push(t("eco.turtles", { count: turtles }));
-        if (rays) marine.push(t("eco.rays", { count: rays }));
-        if (prs > 0.6) marine.push(t("eco.dolphins"));
-        if (prs > 0.85) marine.push(t("eco.whale"));
+        const marine = [t("eco.fish", { count: scene.fish })];
+        if (scene.turtles) marine.push(t("eco.turtles", { count: scene.turtles }));
+        if (scene.rays) marine.push(t("eco.rays", { count: scene.rays }));
+        if (scene.dolphins) marine.push(t("eco.dolphins"));
+        if (scene.whale) marine.push(t("eco.whale"));
         $("eco-marine").textContent = marine.join(" · ");
 
-        const visitors = Math.max(state.reviews, state.outside);
-        const homeCount = stepsPassed(visitors, [0.6, 0.75, 0.9]);
-        const ringCount = stepsPassed(visitors, [0.15, 0.35, 0.55]);
-        const parasolCount = stepsPassed(visitors, [0.45, 0.6, 0.8]);
         const shore = [];
-        if (ringCount) shore.push(t("eco.rings", { count: ringCount }));
-        if (visitors > 0.3) shore.push(t("eco.canoe"));
-        if (parasolCount) shore.push(t("eco.parasols", { count: parasolCount }));
-        if (homeCount) shore.push(t("eco.bungalows", { count: homeCount }));
+        if (scene.rings) shore.push(t("eco.rings", { count: scene.rings }));
+        if (scene.canoe) shore.push(t("eco.canoe"));
+        if (scene.parasols) shore.push(t("eco.parasols", { count: scene.parasols }));
+        if (scene.bungalows) shore.push(t("eco.bungalows", { count: scene.bungalows }));
         $("eco-visitors").textContent = shore.length ? shore.join(" · ") : t("eco.quietShore");
 
-        const activeHomes = HOMES.slice(0, homeCount);
-        const reefs = REEFS.slice(0, pyRound(2 + state.issues * 8)).filter(([rx, ry]) =>
-          activeHomes.every(([hx, hy]) => Math.hypot(rx - hx, ry - hy) > 1.7)
-        ).length;
-        const islets = pyRound(state.forks * 3);
-        const glints = pyRound(4 + state.stars * 20);
-        const horizon = [t("eco.reefs", { count: reefs })];
-        if (islets) horizon.push(t("eco.islets", { count: islets }));
-        horizon.push(t("eco.glints", { count: glints }));
+        const horizon = [t("eco.reefs", { count: scene.reefs })];
+        if (scene.islets) horizon.push(t("eco.islets", { count: scene.islets }));
+        horizon.push(t("eco.glints", { count: scene.glints }));
         $("eco-horizon").textContent = horizon.join(" · ");
       }
 
@@ -1536,8 +1501,9 @@
         for (const [name, label, group, hint] of SIGNALS) {
           const box = document.createElement("div");
           box.className = "signal";
-          const ticks = TICKS[name]
-            ? `<div class="ticks" id="ticks-${name}" aria-hidden="true">${TICKS[name]
+          const marks = name === "prs" ? cuts.prs : name === "reviews" || name === "outside" ? cuts.visitors : null;
+          const ticks = marks
+            ? `<div class="ticks" id="ticks-${name}" aria-hidden="true">${marks
                 .map((cut) => `<i data-cut="${cut}" style="left:${cut * 100}%"></i>`)
                 .join("")}</div>`
             : "";
@@ -1693,21 +1659,30 @@ import sys
 
 sys.path.insert(0, "/app")
 from github_island.growth import CAPS
-from github_island.render import STAGE_GROWTH, render_scene
+from github_island.render import CUTS, STAGE_GROWTH, census, render_scene
 
 SIGNALS = ("prs", "reviews", "outside", "issues", "stars", "forks")
 
 
-def draw(payload):
-    values = json.loads(payload)
+def traits_of(values):
     traits = {name: float(values[name]) for name in SIGNALS}
     traits["growth"] = STAGE_GROWTH[values["stage"]]
-    return render_scene(traits, transparent=not values["poster"], key=str(values["key"]))
+    return traits
+
+
+def draw(payload):
+    values = json.loads(payload)
+    return render_scene(traits_of(values), transparent=not values["poster"], key=str(values["key"]))
+
+
+def census_of(payload):
+    return json.dumps(census(traits_of(json.loads(payload))))
 `);
         caps = JSON.parse(pyodide.runPython("json.dumps(CAPS)"));
-        stageGrowth = JSON.parse(pyodide.runPython("json.dumps(STAGE_GROWTH)"));
+        cuts = JSON.parse(pyodide.runPython("json.dumps(CUTS)"));
         stages = JSON.parse(pyodide.runPython("json.dumps(list(STAGE_GROWTH))"));
         draw = pyodide.globals.get("draw");
+        censusOf = pyodide.globals.get("census_of");
         buildControls();
         applyLanguage();
         render();

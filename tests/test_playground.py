@@ -111,9 +111,13 @@ class PageTests(unittest.TestCase):
 
     def test_the_page_calls_the_renderer_and_no_copy_of_it(self):
         self.assertIn(
-            "from github_island.render import STAGE_GROWTH, render_scene", PAGE
+            "from github_island.render import CUTS, STAGE_GROWTH, census, render_scene",
+            PAGE,
         )
         self.assertIn("from github_island.growth import CAPS", PAGE)
+        # The scene census and the slider marks come from the renderer, not from copies.
+        for copy in ("const HOMES", "const REEFS", "const TICKS", "stepsPassed"):
+            self.assertNotIn(copy, PAGE)
 
 
 class WorkflowTests(unittest.TestCase):
