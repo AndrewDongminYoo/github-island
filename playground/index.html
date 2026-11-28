@@ -91,7 +91,17 @@
       }
       button:hover, .button:hover { border-color: var(--accent); }
       button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-      button:focus-visible, .button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      button:focus-visible, .button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      button:disabled { cursor: default; opacity: 0.55; }
+      .language { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+      select { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; }
+      .account-row { flex-wrap: wrap; margin-top: 6px; }
+      .account-row input { flex-basis: 140px; }
+      .account-status, .account-result { font-size: 13px; overflow-wrap: anywhere; }
+      .account-status { color: var(--soft); }
+      .account-status.error { color: var(--warn); }
+      .account-result p { margin: 6px 0; }
+      .account-result ul { margin: 6px 0; padding-left: 20px; }
       .signal + .signal { margin-top: 14px; }
       .signal .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
       .signal label { font-weight: 600; }
@@ -122,76 +132,90 @@
   </head>
   <body>
     <header>
-      <h1>GitHub Island playground</h1>
+      <div class="language">
+        <label for="language" data-i18n="language">Language</label>
+        <select id="language"><option value="en" lang="en">English</option><option value="ko" lang="ko">한국어</option></select>
+      </div>
+      <h1 data-i18n="page.title">GitHub Island playground</h1>
       <p>
-        Move the signals and watch the island change. This page runs the same Python renderer that
-        draws the published image of
-        <a href="https://github.com/AndrewDongminYoo/github-island">github-island</a>, so what you
-        see here is what a README would show.
+        <span data-i18n="intro.before">Try your GitHub username or adjust the signals. This page runs the same Python renderer as </span><a href="https://github.com/AndrewDongminYoo/github-island">github-island</a><span data-i18n="intro.after">, so the scene you see here is what a README would show.</span>
       </p>
     </header>
     <main>
       <div class="stage">
         <p class="status" id="status" role="status">Loading the Python runtime…</p>
-        <img id="island" alt="The island drawn for the signals on this page" hidden />
+        <img id="island" alt="An island drawn from the activity signals on this page" data-i18n-alt="island.alt" hidden />
         <div class="meter" id="meter" hidden>
           <span id="bytes"></span>
           <div class="bar" id="bar"><span></span></div>
-          <span>200 kB budget</span>
+          <span data-i18n="island.budget">200 kB budget</span>
         </div>
       </div>
-      <form class="panel" id="controls" autocomplete="off">
+      <div class="panel" id="controls">
         <section>
-          <h2>Presets</h2>
+          <form id="account-form" autocomplete="off">
+          <h2 data-i18n="account.title">Your island</h2>
+          <label for="username" data-i18n="account.label">GitHub username</label>
+          <div class="row account-row">
+            <input type="text" id="username" maxlength="39" autocapitalize="none" spellcheck="false" placeholder="octocat" aria-describedby="account-privacy account-status" />
+            <button type="submit" id="preview-account" data-i18n="action.preview" disabled>Preview my island</button>
+            <button type="button" id="cancel-account" data-i18n="action.cancel" hidden>Cancel lookup</button>
+          </div>
+          <small class="check" id="account-privacy" data-i18n="account.privacy">Your username is sent to the lookup service to read public activity. No sign-in or token needed.</small>
+          <p class="account-status" id="account-status" role="status" aria-live="polite"></p>
+          <div class="account-result" id="account-result" hidden></div>
+          </form>
+        </section>
+        <section>
+          <h2 data-i18n="presets.title">Presets</h2>
           <div class="chips" id="presets"></div>
         </section>
         <section>
-          <h2>Growth stage</h2>
-          <div class="chips" id="stages" role="group" aria-label="Growth stage"></div>
-          <small class="check">The stage comes from experience earned over time. It never goes down, and it sets the palms.</small>
+          <h2 data-i18n="growth.title">Growth stage</h2>
+          <div class="chips" id="stages" role="group" aria-label="Growth stage" data-i18n-aria="growth.title"></div>
+          <small class="check" data-i18n="growth.hint">The stage comes from experience earned over time. It never goes down, and it sets the palms.</small>
         </section>
         <section>
-          <h2>Activity in the last 30 days</h2>
+          <h2 data-i18n="signals.title">Activity in the last 30 days</h2>
           <div id="signals"></div>
         </section>
         <section>
-          <h2>Totals over public repositories</h2>
+          <h2 data-i18n="totals.title">Totals over public repositories</h2>
           <div id="totals"></div>
-          <small class="check">Stars and forks are the current totals over the account's own public repositories that are not forks.</small>
+          <small class="check" data-i18n="totals.hint">Current totals over the account's own public repositories that are not forks.</small>
         </section>
         <section>
-          <h2>Island</h2>
+          <h2 data-i18n="island.title">Island</h2>
           <div class="row">
-            <input type="text" id="key" aria-label="Island key" maxlength="60" />
-            <button type="button" id="shuffle">Shuffle</button>
+            <input type="text" id="key" aria-label="Island key" data-i18n-aria="island.key" maxlength="256" />
+            <button type="button" id="shuffle" data-i18n="action.shuffle">Shuffle</button>
           </div>
-          <small class="check">The key seeds the island's shape. A published island uses the account's ID.</small>
-          <label class="check"><input type="checkbox" id="poster" /> Poster variant with a backdrop and a title</label>
+          <small class="check" data-i18n="island.hint">The key seeds the island's shape. Account previews use the published island's versioned account ID.</small>
+          <label class="check"><input type="checkbox" id="poster" /><span data-i18n="island.poster">Poster variant with a backdrop and a title</span></label>
         </section>
         <section>
           <div class="chips">
-            <a class="button" id="download" download="island.svg" href="#">Download SVG</a>
-            <button type="button" id="copy">Copy link</button>
+            <a class="button" id="download" download="island.svg" href="#" data-i18n="action.download">Download SVG</a>
+            <button type="button" id="copy" data-i18n="action.copy">Copy link</button>
           </div>
         </section>
-      </form>
+      </div>
     </main>
-    <footer>
-      Each slider sets a signal from 0 to 1 on a logarithmic scale. The number next to it is the
-      count that gives that value: a total over the last 30 days for activity, and the current
-      total for stars and forks. A signal stops growing at its cap, shown as "or more". Rendering
-      happens in your browser; nothing is sent anywhere.
+    <footer data-i18n="footer">
+      Rendering and slider changes happen in your browser. Account lookup sends the entered username to the preview service.
     </footer>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js"></script>
-    <script>
+    <script type="module">
+      import { createLookup, sceneHash } from "./account.js";
+      import { initialLanguage, saveLanguage, translate } from "./i18n.js";
       const SIGNALS = [
-        // [name, label, unit (one, many), group, hint]
-        ["prs", "Pull requests", ["pull request", "pull requests"], "signals", "Sea animals: fish, then turtles, rays, dolphins, a whale shark"],
-        ["reviews", "Reviews", ["review", "reviews"], "signals", "Visitors: float rings, a canoe, parasols, bungalows"],
-        ["outside", "Outside contributions", ["PR or issue", "PRs and issues"], "signals", "Opened in repositories you do not own. Visitors too: the larger of this and reviews counts"],
-        ["issues", "Issues", ["issue", "issues"], "signals", "Reefs on the seabed"],
-        ["stars", "Stars", ["star", "stars"], "totals", "Glints on the water"],
-        ["forks", "Forks", ["fork", "forks"], "totals", "Satellite islets"],
+        // [name, label, group, hint]
+        ["prs", "Pull requests", "signals", "Sea animals: fish, then turtles, rays, dolphins, a whale shark"],
+        ["reviews", "Reviews", "signals", "Visitors: float rings, a canoe, parasols, bungalows"],
+        ["outside", "Outside contributions", "signals", "Opened in repositories you do not own. Visitors too: the larger of this and reviews counts"],
+        ["issues", "Issues", "signals", "Reefs on the seabed"],
+        ["stars", "Stars", "totals", "Glints on the water"],
+        ["forks", "Forks", "totals", "Satellite islets"],
       ];
       const PRESETS = {
         Quiet: { stage: "seed", prs: 0.1, reviews: 0, outside: 0, issues: 0.2, stars: 0.2, forks: 0 },
@@ -208,6 +232,103 @@
       let stages = [];
       let pending = false;
       let currentUrl = null;
+      let storage;
+      try { storage = window.localStorage; } catch { /* Language storage is optional. */ }
+      let language = initialLanguage(storage, navigator.language);
+      let runtimeMessage = "runtime.loading";
+      let lookup = null;
+      let lookupAvailable = false;
+      let lookupStatus = { code: "unavailable" };
+      let accountResult = null;
+      let accountEdited = false;
+      const t = (key, values) => translate(language, key, values);
+
+      function updateAccount() {
+        const loading = lookupStatus.code === "loading";
+        $("preview-account").disabled = !lookupAvailable || loading;
+        $("cancel-account").hidden = !loading;
+        $("account-status").textContent = t("lookup." + lookupStatus.code, lookupStatus);
+        $("account-status").classList.toggle("error", !["idle", "loading", "success", "canceled", "unavailable"].includes(lookupStatus.code));
+        const result = $("account-result");
+        result.replaceChildren();
+        result.hidden = !accountResult;
+        if (!accountResult) return;
+        const add = (text) => { const p = document.createElement("p"); p.textContent = text; result.append(p); };
+        add(t(accountEdited ? "account.edited" : "account.result", { login: accountResult.subject.login }));
+        add(t("account.bootstrap"));
+        const lastDay = new Date(Date.parse(accountResult.activity_end + "T00:00:00Z") - 86400000).toISOString().slice(0, 10);
+        add(t("account.period", { start: accountResult.activity_start, end: lastDay }));
+        add(t("account.observed", { date: new Date(accountResult.observed_at).toLocaleString(language, { timeZone: "UTC" }) + " UTC" }));
+        add(t("account.excluded", { repository: accountResult.excluded_repository }));
+        add(t("account.counts"));
+        const list = document.createElement("ul");
+        for (const [name] of SIGNALS) {
+          const item = document.createElement("li");
+          item.textContent = `${t("signal." + name)}: ${accountResult.counts[name].toLocaleString(language)}`;
+          list.append(item);
+        }
+        result.append(list);
+      }
+
+      function editAccount(clear = false) {
+        lookup?.cancel();
+        if (clear) {
+          accountResult = null;
+          lookupStatus = { code: lookupAvailable ? "idle" : "unavailable" };
+        }
+        accountEdited = true;
+        updateAccount();
+      }
+
+      function applyLanguage() {
+        document.documentElement.lang = language;
+        document.title = t("page.title");
+        $("language").value = language;
+        for (const element of document.querySelectorAll("[data-i18n]")) element.textContent = t(element.dataset.i18n);
+        for (const element of document.querySelectorAll("[data-i18n-aria]")) element.setAttribute("aria-label", t(element.dataset.i18nAria));
+        for (const element of document.querySelectorAll("[data-i18n-alt]")) element.alt = t(element.dataset.i18nAlt);
+        if (runtimeMessage) $("status").textContent = t(runtimeMessage);
+        if (draw) syncControls();
+        updateAccount();
+      }
+
+      $("language").addEventListener("change", (event) => {
+        language = event.target.value;
+        saveLanguage(storage, language);
+        applyLanguage();
+      });
+      $("account-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (lookupAvailable && lookupStatus.code !== "loading") lookup.load($("username").value);
+      });
+      $("cancel-account").addEventListener("click", () => lookup?.cancel());
+      applyLanguage();
+
+      async function configureLookup() {
+        try {
+          const response = await fetch("config.json");
+          if (!response.ok) return;
+          const config = await response.json();
+          if (typeof config.previewApi !== "string" || !config.previewApi) return;
+          const url = new URL(config.previewApi);
+          if (url.username || url.password || url.search || url.hash ||
+              !(url.protocol === "https:" || (url.protocol === "http:" && ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)))) return;
+          lookup = createLookup({
+            baseUrl: config.previewApi.replace(/\/$/, ""), rules: { caps, stages },
+            onStatus: (value) => { lookupStatus = value; updateAccount(); },
+            onResult: (value) => {
+              Object.assign(state, value.settings);
+              accountResult = value;
+              accountEdited = false;
+              syncControls();
+              schedule();
+            },
+          });
+          lookupAvailable = true;
+          lookupStatus = { code: "idle" };
+        } catch { /* Presets still work when the optional API is unavailable. */ }
+        updateAccount();
+      }
 
       function readHash() {
         const params = new URLSearchParams(location.hash.slice(1));
@@ -216,17 +337,12 @@
           if (params.has(name) && value >= 0 && value <= 1) state[name] = value;
         }
         if (params.has("stage")) state.stage = params.get("stage");
-        if (params.has("key")) state.key = params.get("key").slice(0, 60);
+        if (params.has("key")) state.key = params.get("key").slice(0, 256);
         state.poster = params.get("poster") === "1";
       }
 
       function writeHash() {
-        const params = new URLSearchParams();
-        params.set("stage", state.stage);
-        for (const [name] of SIGNALS) params.set(name, state[name].toFixed(2));
-        params.set("key", state.key);
-        if (state.poster) params.set("poster", "1");
-        history.replaceState(null, "", "#" + params.toString());
+        history.replaceState(null, "", "#" + sceneHash(state, SIGNALS.map(([name]) => name)));
       }
 
       function countFor(name, value) {
@@ -234,10 +350,9 @@
         return Math.round(Math.expm1(value * Math.log1p(caps[name])));
       }
 
-      function describe(name, unit, value) {
+      function describe(name, value) {
         const count = countFor(name, value);
-        const words = count === 1 ? unit[0] : unit[1];
-        const amount = value >= 1 ? `${count} or more ${words}` : `≈ ${count} ${words}`;
+        const amount = t(value >= 1 ? "count.capped" : "count.approx", { count: count.toLocaleString(language) });
         return `${amount} · ${value.toFixed(2)}`;
       }
 
@@ -245,8 +360,9 @@
         for (const name of Object.keys(PRESETS)) {
           const button = document.createElement("button");
           button.type = "button";
-          button.textContent = name;
+          button.dataset.i18n = "preset." + name;
           button.addEventListener("click", () => {
+            editAccount(true);
             Object.assign(state, PRESETS[name]);
             syncControls();
             schedule();
@@ -256,34 +372,38 @@
         for (const name of stages) {
           const button = document.createElement("button");
           button.type = "button";
-          button.textContent = name;
+          button.dataset.i18n = "stage." + name;
           button.dataset.stage = name;
           button.addEventListener("click", () => {
+            editAccount();
             state.stage = name;
             syncControls();
             schedule();
           });
           $("stages").append(button);
         }
-        for (const [name, label, , group, hint] of SIGNALS) {
+        for (const [name, label, group, hint] of SIGNALS) {
           const box = document.createElement("div");
           box.className = "signal";
           box.innerHTML =
-            `<div class="head"><label for="s-${name}">${label}</label><output id="o-${name}" for="s-${name}"></output></div>` +
+            `<div class="head"><label for="s-${name}" data-i18n="signal.${name}">${label}</label><output id="o-${name}" for="s-${name}"></output></div>` +
             `<input type="range" id="s-${name}" min="0" max="1" step="0.01" />` +
-            `<small>${hint}</small>`;
+            `<small data-i18n="hint.${name}">${hint}</small>`;
           $(group).append(box);
           box.querySelector("input").addEventListener("input", (event) => {
+            editAccount();
             state[name] = Number(event.target.value);
             syncControls();
             schedule();
           });
         }
         $("key").addEventListener("input", (event) => {
+          editAccount();
           state.key = event.target.value;
           schedule();
         });
         $("shuffle").addEventListener("click", () => {
+          editAccount();
           state.key = "island-" + Math.random().toString(36).slice(2, 8);
           syncControls();
           schedule();
@@ -296,11 +416,11 @@
           writeHash();
           try {
             await navigator.clipboard.writeText(location.href);
-            $("copy").textContent = "Copied";
+            $("copy").textContent = t("action.copied");
           } catch {
-            $("copy").textContent = "Copy from the address bar";
+            $("copy").textContent = t("action.copyFallback");
           }
-          setTimeout(() => ($("copy").textContent = "Copy link"), 1600);
+          setTimeout(() => ($("copy").textContent = t("action.copy")), 1600);
         });
       }
 
@@ -309,9 +429,9 @@
         for (const button of $("stages").children) {
           button.setAttribute("aria-pressed", String(button.dataset.stage === state.stage));
         }
-        for (const [name, , unit] of SIGNALS) {
+        for (const [name] of SIGNALS) {
           $("s-" + name).value = state[name];
-          $("o-" + name).textContent = describe(name, unit, state[name]);
+          $("o-" + name).textContent = describe(name, state[name]);
         }
         if ($("key").value !== state.key) $("key").value = state.key;
         $("poster").checked = state.poster;
@@ -330,8 +450,8 @@
         let svg;
         try {
           svg = draw(JSON.stringify(state));
-        } catch (error) {
-          fail("The renderer raised an error: " + error.message);
+        } catch {
+          fail("runtime.renderFailed");
           return;
         }
         const blob = new Blob([svg], { type: "image/svg+xml" });
@@ -341,6 +461,8 @@
         if (currentUrl) URL.revokeObjectURL(currentUrl);
         currentUrl = url;
         $("status").hidden = true;
+        $("status").classList.remove("error");
+        runtimeMessage = null;
         $("island").hidden = false;
         $("meter").hidden = false;
         $("bytes").textContent = (blob.size / 1024).toFixed(1) + " kB";
@@ -350,7 +472,8 @@
       }
 
       function fail(message) {
-        $("status").textContent = message;
+        runtimeMessage = message;
+        $("status").textContent = t(message);
         $("status").classList.add("error");
         $("status").hidden = false;
       }
@@ -358,7 +481,8 @@
       async function boot() {
         readHash();
         const pyodide = await loadPyodide();
-        $("status").textContent = "Loading the renderer…";
+        runtimeMessage = "runtime.renderer";
+        $("status").textContent = t(runtimeMessage);
         const list = await fetch("py/modules.json");
         if (!list.ok) {
           throw new Error(
@@ -393,11 +517,12 @@ def draw(payload):
         stages = JSON.parse(pyodide.runPython("json.dumps(list(STAGE_GROWTH))"));
         draw = pyodide.globals.get("draw");
         buildControls();
-        syncControls();
+        applyLanguage();
         render();
+        await configureLookup();
       }
 
-      boot().catch((error) => fail("The playground could not start: " + error.message));
+      boot().catch(() => fail("runtime.failed"));
     </script>
   </body>
 </html>

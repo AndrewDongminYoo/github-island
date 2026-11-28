@@ -110,10 +110,12 @@ Try it at [andrewdongminyoo.github.io/github-island](https://andrewdongminyoo.gi
 
 `playground/index.html` is a page with a slider for each signal and a choice of growth stage.
 It redraws the island on every change, shows its size against the byte budget, and keeps the settings in the address so that a view can be shared.
+The language selector supports English and Korean, initially follows the browser language, and remembers an explicit choice when local storage is available.
 
 The page does not have a renderer of its own.
 It loads [Pyodide](https://pyodide.org) and runs `render.py` and the modules it imports in the browser, so the page and the published image always come from the same code.
-The first load fetches the Python runtime from a CDN and takes a few seconds; after that, drawing happens in the browser and nothing is sent anywhere.
+The first load fetches the Python runtime from a CDN and takes a few seconds; after that, drawing and slider changes happen in the browser.
+Account lookup sends the entered username to a separately hosted preview API.
 
 ```bash
 python tools/playground.py work/site
@@ -121,6 +123,62 @@ python -m http.server --directory work/site
 ```
 
 The `Playground` workflow builds the same site and deploys it to GitHub Pages on a push to `main`.
+
+### Account previews
+
+When a preview API is configured, enter a GitHub username to see a new island bootstrapped from the last 30 completed UTC days of public activity.
+No visitor sign-in or token is required.
+The result shows the collection dates and exact counts; stars and forks are observed at lookup time.
+It does not reconstruct lifetime growth or an existing published island.
+Changing the signals, stage, or key marks the result as an edited preview.
+Shared links preserve the scene settings and do not perform another account lookup.
+
+The API reuses the existing public collector and growth calculation.
+It excludes activity in its configured hosting repository, initially `AndrewDongminYoo/github-island`.
+A publication configured with a different exclusion repository can produce a different result.
+An incomplete lookup leaves the current scene intact instead of showing zero activity.
+
+GitHub Pages hosts the static interface; it cannot run the Python lookup service.
+Deploy the WSGI application `github_island.preview:application` separately and set the repository variable `PREVIEW_API_URL` to its HTTPS base URL for the Pages build.
+Without that variable, the site keeps its presets and sliders and explains that account preview is unavailable.
+The API URL is public configuration, not a secret.
+
+Set these variables only in the API's server environment:
+
+| Variable | Purpose |
+| --- | --- |
+| `PREVIEW_GH_TOKEN` | A dedicated credential that can read public GitHub GraphQL data. Never put it in Pages assets or browser input. |
+| `PREVIEW_ORIGIN` | Exact allowed browser origin, such as `https://andrewdongminyoo.github.io`, without a path or trailing slash. |
+| `PREVIEW_REPOSITORY` | Repository excluded from activity; defaults to `AndrewDongminYoo/github-island`. |
+
+For local development, set `PREVIEW_GH_TOKEN` in the API process environment, then start the API and static site in separate terminals:
+
+```bash
+PREVIEW_ORIGIN=http://127.0.0.1:8000 python -m github_island.preview --port 8787
+```
+
+```bash
+PREVIEW_API_URL=http://127.0.0.1:8787 python tools/playground.py work/site
+python -m http.server --bind 127.0.0.1 --directory work/site 8000
+```
+
+The loopback development server is not a production server.
+Production requires an HTTPS WSGI host with one server process, multiple request threads, and one instance, plus a provider-side request limit.
+The host must allow a short-lived child Python process for each uncached lookup.
+The server sends credentials through a private pipe and kills and reaps that child if the entire collection exceeds 60 seconds, including slow network operations.
+Configure its request timeout above the API's 60-second collection budget and below the browser's 75-second wait budget.
+The service allows one active collection and globally limits new lookups to two per minute and 60 per hour, counting failures.
+It caches up to 128 successful results for 15 minutes, expires them at UTC midnight, and caps each collection at 64 upstream requests including retries.
+Cache hits do not consume the lookup quota.
+These controls are in memory: restarts reset them, and multiple server processes or replicas would each have their own allowance.
+CORS does not replace the provider-side request limit.
+
+For AWS Lambda, build the deployment package with `python tools/lambda_bundle.py work/lambda.zip` and use `github_island.lambda_preview.handler` with Python 3.12.
+Configure 256 MiB of memory, a 70-second timeout, and reserved concurrency of one.
+Use a Function URL with buffered responses and configure its CORS origin to match `PREVIEW_ORIGIN`; the adapter leaves CORS response headers to the Function URL.
+Public URL access requires both `lambda:InvokeFunctionUrl` and `lambda:InvokeFunction`, with the latter restricted to invocation through the Function URL.
+Lambda environment replacement can reset the in-memory cache and lookup allowance even with reserved concurrency of one.
+Hosting, credentials, and a live end-to-end lookup must be verified before enabling the public API URL.
 
 ## Status
 
@@ -147,11 +205,13 @@ The pipeline comes from [github-terrarium](https://github.com/AndrewDongminYoo/g
 python -m pip install --require-hashes -r requirements-dev.txt
 python -m pip install -e .
 python -m unittest discover -s tests -v
+node --test tests/test_*.mjs
 ruff check src tests tools
 ruff format --check src tests tools
 ```
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the rules for a change and for a pull request.
+The browser-controller and language tests use Node.js 22.7 or later and require no npm dependencies.
 
 ## Known limits
 

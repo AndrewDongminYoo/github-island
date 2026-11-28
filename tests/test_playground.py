@@ -18,6 +18,44 @@ PACKAGE = ROOT / "src" / "github_island"
 
 
 class BuildTests(unittest.TestCase):
+    def test_build_emits_optional_public_configuration_and_browser_modules(self):
+        with tempfile.TemporaryDirectory() as directory:
+            site = TOOL["build"](directory)
+            self.assertEqual(
+                json.loads((site / "config.json").read_text()), {"previewApi": ""}
+            )
+            for name in ("account.js", "i18n.js"):
+                self.assertEqual(
+                    (site / name).read_bytes(),
+                    (ROOT / "playground" / name).read_bytes(),
+                )
+            site = TOOL["build"](directory, preview_api="https://preview.example.test/")
+            self.assertEqual(
+                json.loads((site / "config.json").read_text()),
+                {"previewApi": "https://preview.example.test"},
+            )
+
+    def test_api_url_rejects_secrets_and_unsafe_schemes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for url in (
+                "http://example.test",
+                "https://user:secret@example.test",
+                "https://example.test?token=secret",
+                "//example.test",
+                "javascript:alert(1)",
+                "https://example.test/#secret",
+                "https://example.test\n",
+                "https://example.test?",
+                "https://example.test#",
+                "https://example.test:wat",
+                "https://example.test:99999",
+            ):
+                with self.subTest(url=url), self.assertRaises(ValueError):
+                    TOOL["build"](directory, preview_api=url)
+            self.assertTrue(
+                TOOL["build"](directory, preview_api="http://127.0.0.1:8787")
+            )
+
     def test_build_copies_the_page_and_the_listed_modules_unchanged(self):
         with tempfile.TemporaryDirectory() as directory:
             site = TOOL["build"](Path(directory) / "site")

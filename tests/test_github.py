@@ -2,13 +2,60 @@ import io
 import json
 import unittest
 import urllib.error
+import urllib.request
+from email.message import Message
+from unittest.mock import patch
 
 from github_island.github import GitHubError, GraphQLClient
 
 
 class TransportTests(unittest.TestCase):
+    def test_redirect_cannot_forward_authorization_to_another_host(self):
+        with patch("urllib.request.OpenerDirector.open", autospec=True) as opened:
+            opened.return_value = io.BytesIO(b'{"data":{}}')
+            GraphQLClient("SENTINEL")("q", {})
+        director = opened.call_args.args[0]
+        handler = next(
+            item
+            for item in director.handlers
+            if isinstance(item, urllib.request.HTTPRedirectHandler)
+        )
+        original = urllib.request.Request(
+            "https://api.github.com/graphql",
+            data=b"{}",
+            headers={"Authorization": "Bearer SENTINEL"},
+        )
+        self.assertIsNone(
+            handler.redirect_request(
+                original, io.BytesIO(), 302, "Moved", {}, "https://other.test/steal"
+            )
+        )
+
+    def test_graphql_rate_limit_is_unavailable_with_retry_delay(self):
+        body = io.BytesIO(b'{"errors":[{"type":"RATE_LIMITED","message":"secret"}]}')
+        body.headers = Message()
+        body.headers["x-ratelimit-remaining"] = "0"
+        body.headers["x-ratelimit-reset"] = "1300"
+        with patch("github_island.github.time.time", return_value=1000):
+            with self.assertRaises(GitHubError) as caught:
+                GraphQLClient("token", opener=lambda *a, **k: body)("q", {})
+        self.assertTrue(caught.exception.unavailable)
+        self.assertEqual(caught.exception.retry_after, 300)
+        self.assertNotIn("secret", str(caught.exception))
+
     def client(self, payload):
         return GraphQLClient("test-token", opener=lambda *a, **k: io.BytesIO(payload))
+
+    def test_graphql_secondary_limit_uses_retry_after_without_error_type(self):
+        body = io.BytesIO(b'{"errors":[{"message":"secret"}]}')
+        body.headers = Message()
+        body.headers["Retry-After"] = "60"
+        body.headers["X-RateLimit-Remaining"] = "4999"
+        with self.assertRaises(GitHubError) as caught:
+            GraphQLClient("token", opener=lambda *a, **k: body)("q", {})
+        self.assertTrue(caught.exception.unavailable)
+        self.assertEqual(caught.exception.retry_after, 60)
+        self.assertNotIn("secret", str(caught.exception))
 
     def test_accepts_data(self):
         self.assertEqual(
@@ -68,6 +115,34 @@ class TransportTests(unittest.TestCase):
 
 
 class RetryTests(unittest.TestCase):
+    def test_preview_deadline_bounds_socket_timeout(self):
+        timeouts = []
+
+        def opener(request, timeout):
+            timeouts.append(timeout)
+            return io.BytesIO(b'{"data":{}}')
+
+        with patch("github_island.github.time.monotonic", return_value=100):
+            client = GraphQLClient("token", opener=opener, max_seconds=10)
+            self.assertEqual(client("q", {}), {})
+        self.assertEqual(timeouts, [10])
+
+    def test_response_arriving_after_deadline_is_rejected(self):
+        with patch("github_island.github.time.monotonic", side_effect=[100, 100, 111]):
+            client = GraphQLClient(
+                "token",
+                opener=lambda *a, **k: io.BytesIO(b'{"data":{}}'),
+                max_seconds=10,
+            )
+            with self.assertRaisesRegex(GitHubError, "deadline"):
+                client("q", {})
+
+    def test_exhausted_budget_is_temporary_unavailability(self):
+        client = GraphQLClient("token", max_requests=0)
+        with self.assertRaises(GitHubError) as caught:
+            client("q", {})
+        self.assertTrue(getattr(caught.exception, "unavailable", False))
+
     def test_retryable_errors_then_success(self):
         for code, headers in [
             (429, {"Retry-After": "1"}),

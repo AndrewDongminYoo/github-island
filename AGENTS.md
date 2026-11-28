@@ -17,6 +17,7 @@ Draw an isometric island as one animated SVG, and grow it from public GitHub act
 
 - The repository has a read-only public collector, local growth reconciliation, a renderer for a growth state, an SVG validator, offline bundle build and validation, a `publish` command, a `generate` command that publishes with one conflict retry, a manual `restore` command, a guarded `generate.yml` workflow, and example scenes. Live output was first published by a manual bootstrap on 2026-11-19 ([publication note](docs/notes/2026-11-19-first-publication.md)); the first scheduled run, on 2026-11-20, succeeded 7 hours after its cron time ([scheduled run note](docs/notes/2026-11-20-first-scheduled-run.md)), so do not claim that scheduled runs start on time.
 - Keep source and documentation on `main`; generated images and growth state go together on `output`.
+- Follow the [account preview documentation](README.md#account-previews) for the Playground's separate API, server-only credential, request limits, and Lambda deployment.
 - Follow [CONTRIBUTING.md](CONTRIBUTING.md) for the rules on the image, the validator, the examples, activity and state, the `output` branch, and language.
 
 ## Verification
