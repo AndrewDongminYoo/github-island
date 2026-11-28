@@ -1,6 +1,6 @@
 # Account preview in the Playground
 
-Status: approved on 2026-11-28; implemented and locally verified; public deployment pending.
+Status: approved on 2026-11-28; implemented and publicly deployed, with verification recorded in the [implementation plan](../plans/2026-11-28-account-preview.md#2026-11-28-public-deployment-completed).
 
 ## Intent and approved direction
 
@@ -125,9 +125,8 @@ An empty API URL disables account lookup with a clear availability message while
 Do not accept an API URL from a query parameter or fragment.
 Pass the API URL into the Pages build through repository configuration; it is not a secret.
 
-Implementation and local validation are in scope now.
-Production hosting provider, service URL, credential provisioning, and provider-side request limit are not yet verified.
-Select and verify those before deployment; do not deploy or change external account configuration without approval.
+Production hosting, the service URL, credential provisioning, and the provider-side request limit require separate approval and verification before deployment.
+Do not deploy or change external account configuration without that approval.
 The feature is locally complete only after both API and browser acceptance checks pass, and publicly available only after a deployed end-to-end lookup succeeds.
 
 ## Acceptance checks

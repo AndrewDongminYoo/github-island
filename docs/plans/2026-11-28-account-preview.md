@@ -115,7 +115,7 @@ The server token must be a dedicated public-data credential, not the operator's 
 - [x] Add and test `src/github_island/lambda_preview.py` and deterministic `tools/lambda_bundle.py`.
 - [x] Deploy the package to the verified personal AWS account and verify runtime, concurrency, timeout, and child-process execution.
 - [x] Configure a dedicated GitHub credential and verify a live account result through the deployed endpoint.
-- [ ] Set the Pages API URL, publish the verified source changes, and verify the public browser flow.
+- [x] Set the Pages API URL, publish the verified source changes, and verify the public browser flow.
 
 ### Deployment verification in progress
 
@@ -135,3 +135,13 @@ A lowercase lookup returned the identical cached payload in 0.143 seconds.
 The deployed package SHA-256 matched the locally built ZIP.
 The final deployment review added regressions for GraphQL secondary limits identified by `Retry-After` and provider-generated HTTP 429 responses without an application error body.
 Both now produce retry guidance and preserve the current scene.
+
+### 2026-11-28: Public deployment completed
+
+Implementation commit `5ee517b` passed [CI](https://github.com/AndrewDongminYoo/github-island/actions/runs/46133305403) and the [Pages deployment](https://github.com/AndrewDongminYoo/github-island/actions/runs/46133305375).
+Python 3.12.16 passed 271 tests; Node passed 10 tests; Ruff lint and format checks passed.
+The public HTML, JavaScript, configuration, and renderer module list matched the local build byte for byte.
+The public Playground successfully loaded the account and rendered its island after switching to Korean while collection was running.
+A concurrent request received AWS's 429 response with the allowed-origin CORS header.
+The downloadable SVG was 108,449 bytes and matched the Python renderer's SHA-256.
+Reloading the settings link preserved those exact SVG bytes and the saved language without making another account lookup.
