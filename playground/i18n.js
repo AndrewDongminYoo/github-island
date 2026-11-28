@@ -211,12 +211,18 @@ export function initialLanguage(storage, browserLanguage = "en") {
   try {
     const saved = storage?.getItem("github-island-language");
     if (saved === "en" || saved === "ko") return saved;
-  } catch { /* Storage can be disabled without disabling the Playground. */ }
+  } catch {
+    /* Storage can be disabled without disabling the Playground. */
+  }
   return browserLanguage.toLowerCase().split("-")[0] === "ko" ? "ko" : "en";
 }
 
 export function saveLanguage(storage, language) {
-  try { storage?.setItem("github-island-language", language); } catch { /* Optional preference. */ }
+  try {
+    storage?.setItem("github-island-language", language);
+  } catch {
+    /* Optional preference. */
+  }
 }
 
 export function translate(language, key, values = {}) {

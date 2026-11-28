@@ -13,33 +13,52 @@ function day(value) {
 }
 
 export function validatePreview(value, login, { caps, stages }) {
-  if (!record(value) || value.schema_version !== 1 || !record(value.subject) ||
-      !record(value.counts) || !record(value.settings)) throw Error("Invalid preview");
+  if (!record(value) || value.schema_version !== 1 || !record(value.subject) || !record(value.counts) || !record(value.settings)) throw Error("Invalid preview");
   const { subject, settings, counts } = value;
-  if (typeof subject.login !== "string" || !LOGIN.test(subject.login) ||
-      subject.login.toLowerCase() !== login.toLowerCase() ||
-      typeof subject.id !== "string" || !/^[A-Za-z0-9_=-]{1,200}$/.test(subject.id) ||
-      settings.key !== `island-seed-v1:${subject.id}` || !stages.includes(settings.stage)) throw Error("Invalid identity");
-  if (day(value.activity_end) - day(value.activity_start) !== 30 * 86400000 ||
-      typeof value.observed_at !== "string" || !/(Z|\+00:00)$/.test(value.observed_at) ||
-      !Number.isFinite(Date.parse(value.observed_at)) ||
-      new Date(value.observed_at).toISOString().slice(0, 10) !== value.activity_end ||
-      typeof value.excluded_repository !== "string" ||
-      !/^[A-Za-z0-9-]+\/[A-Za-z0-9_.-]+$/.test(value.excluded_repository)) throw Error("Invalid observation");
+  if (
+    typeof subject.login !== "string" ||
+    !LOGIN.test(subject.login) ||
+    subject.login.toLowerCase() !== login.toLowerCase() ||
+    typeof subject.id !== "string" ||
+    !/^[A-Za-z0-9_=-]{1,200}$/.test(subject.id) ||
+    settings.key !== `island-seed-v1:${subject.id}` ||
+    !stages.includes(settings.stage)
+  )
+    throw Error("Invalid identity");
+  if (
+    day(value.activity_end) - day(value.activity_start) !== 30 * 86400000 ||
+    typeof value.observed_at !== "string" ||
+    !/(Z|\+00:00)$/.test(value.observed_at) ||
+    !Number.isFinite(Date.parse(value.observed_at)) ||
+    new Date(value.observed_at).toISOString().slice(0, 10) !== value.activity_end ||
+    typeof value.excluded_repository !== "string" ||
+    !/^[A-Za-z0-9-]+\/[A-Za-z0-9_.-]+$/.test(value.excluded_repository)
+  )
+    throw Error("Invalid observation");
   const safeSettings = { key: settings.key, stage: settings.stage };
   const safeCounts = {};
   for (const [name, cap] of Object.entries(caps)) {
-    if (!Number.isSafeInteger(counts[name]) || counts[name] < 0 ||
-        !Number.isFinite(settings[name]) || settings[name] < 0 || settings[name] > 1 ||
-        Math.abs(settings[name] - Math.min(1, Math.log1p(counts[name]) / Math.log1p(cap))) > 1e-12) throw Error("Invalid signals");
+    if (
+      !Number.isSafeInteger(counts[name]) ||
+      counts[name] < 0 ||
+      !Number.isFinite(settings[name]) ||
+      settings[name] < 0 ||
+      settings[name] > 1 ||
+      Math.abs(settings[name] - Math.min(1, Math.log1p(counts[name]) / Math.log1p(cap))) > 1e-12
+    )
+      throw Error("Invalid signals");
     safeSettings[name] = settings[name];
     safeCounts[name] = counts[name];
   }
   if (counts.outside > counts.prs + counts.issues) throw Error("Invalid outside count");
   return {
-    activity_end: value.activity_end, activity_start: value.activity_start,
-    counts: safeCounts, excluded_repository: value.excluded_repository,
-    observed_at: value.observed_at, schema_version: 1, settings: safeSettings,
+    activity_end: value.activity_end,
+    activity_start: value.activity_start,
+    counts: safeCounts,
+    excluded_repository: value.excluded_repository,
+    observed_at: value.observed_at,
+    schema_version: 1,
+    settings: safeSettings,
     subject: { id: subject.id, login: subject.login },
   };
 }
@@ -68,8 +87,14 @@ export function createLookup({ baseUrl, rules, onResult, onStatus, fetcher = fet
   async function load(input) {
     cancel(null);
     const login = input.trim();
-    if (!baseUrl) { onStatus({ code: "unavailable" }); return; }
-    if (!LOGIN.test(login)) { onStatus({ code: "invalid_login" }); return; }
+    if (!baseUrl) {
+      onStatus({ code: "unavailable" });
+      return;
+    }
+    if (!LOGIN.test(login)) {
+      onStatus({ code: "invalid_login" });
+      return;
+    }
     const current = generation;
     const controller = new AbortController();
     const timer = setTimeout(() => {
@@ -79,7 +104,10 @@ export function createLookup({ baseUrl, rules, onResult, onStatus, fetcher = fet
     onStatus({ code: "loading", login });
     try {
       const response = await fetcher(`${baseUrl}/preview?login=${encodeURIComponent(login)}`, {
-        cache: "no-store", credentials: "omit", redirect: "error", signal: controller.signal,
+        cache: "no-store",
+        credentials: "omit",
+        redirect: "error",
+        signal: controller.signal,
       });
       if (current !== generation) return;
       if (response.status === 429) {

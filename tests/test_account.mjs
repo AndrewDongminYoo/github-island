@@ -7,8 +7,10 @@ function result() {
   return {
     schema_version: 1,
     subject: { id: "U1", login: "octocat" },
-    activity_start: "2026-10-29", activity_end: "2026-11-28",
-    observed_at: "2026-11-28T12:00:00+00:00", excluded_repository: "owner/island",
+    activity_start: "2026-10-29",
+    activity_end: "2026-11-28",
+    observed_at: "2026-11-28T12:00:00+00:00",
+    excluded_repository: "owner/island",
     counts: { prs: 1, reviews: 0, issues: 0, outside: 0, stars: 0, forks: 0 },
     settings: { prs: 0.20184908658209985, reviews: 0, issues: 0, outside: 0, stars: 0, forks: 0, stage: "seed", key: "island-seed-v1:U1" },
   };
