@@ -90,9 +90,9 @@ def job_condition(text):
 
 def check_branch_guard(text):
     (line,) = job_condition(text)
-    assert f"(github.event_name == 'schedule' || {DEFAULT_BRANCH})" in line, (
-        "default-branch guard"
-    )
+    assert (
+        f"(github.event_name == 'schedule' || {DEFAULT_BRANCH})" in line
+    ), "default-branch guard"
 
 
 def check_repository_guard(text):

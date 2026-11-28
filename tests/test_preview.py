@@ -297,9 +297,9 @@ class ServiceTests(unittest.TestCase):
     def test_absent_user_and_incomplete_pages_do_not_become_empty_islands(self):
         for transform in (
             lambda q, v, u: None,
-            lambda q, v, u: {**u, "repositories": page([], "again")}
-            if "repositories" in u
-            else u,
+            lambda q, v, u: (
+                {**u, "repositories": page([], "again")} if "repositories" in u else u
+            ),
         ):
 
             def factory(*args, **kwargs):
