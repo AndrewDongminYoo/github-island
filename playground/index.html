@@ -1299,7 +1299,9 @@
         }
         $("active-stage").textContent = t("stage." + state.stage);
         $("active-key").textContent = `#${state.key || "—"}`;
+        // The poster variant draws its own backdrop, so the swatches have nothing to change.
         $("surfaces").classList.toggle("disabled", state.poster);
+        for (const button of $("surfaces").querySelectorAll("button")) button.disabled = state.poster;
 
         $("eco-canopy").textContent = `${t("eco.palms", { count: scene.palms })} · ${t("stage." + state.stage)}`;
 
