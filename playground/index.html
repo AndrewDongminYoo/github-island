@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <title>GitHub Island playground</title>
-    <meta
-      name="description"
-      content="Move the activity signals and watch the island change. The page runs the project's own Python renderer in the browser."
-    />
+    <meta name="description" content="Move the activity signals and watch the island change. The page runs the project's own Python renderer in the browser." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -75,16 +72,18 @@
           --shadow-lg: 0 28px 56px -22px rgba(0, 0, 0, 0.62), 0 2px 10px rgba(0, 0, 0, 0.35);
         }
       }
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       /* A display rule on an element would otherwise override its `hidden` attribute. */
-      [hidden] { display: none !important; }
+      [hidden] {
+        display: none !important;
+      }
       body {
         margin: 0;
         min-height: 100vh;
         background: var(--page);
-        background-image:
-          radial-gradient(960px 420px at 18% -6%, var(--page-glow), transparent 68%),
-          radial-gradient(840px 440px at 88% 4%, var(--page-sand), transparent 66%);
+        background-image: radial-gradient(960px 420px at 18% -6%, var(--page-glow), transparent 68%), radial-gradient(840px 440px at 88% 4%, var(--page-sand), transparent 66%);
         color: var(--ink);
         font: 14.5px/1.55 var(--font-sans);
         -webkit-font-smoothing: antialiased;
@@ -94,7 +93,9 @@
         text-decoration-thickness: 1px;
         text-underline-offset: 3px;
       }
-      a:hover { color: var(--accent-strong); }
+      a:hover {
+        color: var(--accent-strong);
+      }
       svg.icon {
         width: 15px;
         height: 15px;
@@ -160,7 +161,9 @@
         font-weight: 500;
         text-decoration: none;
         box-shadow: var(--shadow-sm);
-        transition: border-color 0.16s ease, transform 0.16s ease;
+        transition:
+          border-color 0.16s ease,
+          transform 0.16s ease;
       }
       .repo-link:hover {
         border-color: var(--accent);
@@ -192,7 +195,9 @@
         padding: 3px 10px;
         cursor: pointer;
       }
-      select:hover { border-color: var(--line-strong); }
+      select:hover {
+        border-color: var(--line-strong);
+      }
       .hero-copy {
         display: flex;
         align-items: flex-end;
@@ -326,10 +331,18 @@
         border: 1px solid rgba(127, 127, 127, 0.35);
         flex: none;
       }
-      .swatch-auto { background: linear-gradient(135deg, #f3efe4 50%, #0d1117 50%); }
-      .swatch-sand { background: #ede6d5; }
-      .swatch-light { background: #ffffff; }
-      .swatch-dark { background: #0d1117; }
+      .swatch-auto {
+        background: linear-gradient(135deg, #f3efe4 50%, #0d1117 50%);
+      }
+      .swatch-sand {
+        background: #ede6d5;
+      }
+      .swatch-light {
+        background: #ffffff;
+      }
+      .swatch-dark {
+        background: #0d1117;
+      }
 
       .stage-viewport {
         position: relative;
@@ -337,17 +350,21 @@
         border: 1px solid var(--line);
         background-color: var(--stage-bg);
         background-image:
-          radial-gradient(circle at 50% 42%, rgba(47, 196, 194, 0.1), transparent 65%),
-          linear-gradient(to right, var(--stage-grid) 1px, transparent 1px),
+          radial-gradient(circle at 50% 42%, rgba(47, 196, 194, 0.1), transparent 65%), linear-gradient(to right, var(--stage-grid) 1px, transparent 1px),
           linear-gradient(to bottom, var(--stage-grid) 1px, transparent 1px);
-        background-size: 100% 100%, 28px 28px, 28px 28px;
+        background-size:
+          100% 100%,
+          28px 28px,
+          28px 28px;
         min-height: 410px;
         padding: 18px;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        transition: background-color 0.22s ease, border-color 0.22s ease;
+        transition:
+          background-color 0.22s ease,
+          border-color 0.22s ease;
       }
       .stage-viewport[data-surface="sand"] {
         background-color: #ece5d4;
@@ -384,8 +401,14 @@
         animation: islandFade 0.28s ease-out;
       }
       @keyframes islandFade {
-        from { opacity: 0.4; transform: translateY(3px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0.4;
+          transform: translateY(3px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       /* Boot & Status View */
@@ -414,8 +437,15 @@
         animation-delay: -1.4s;
       }
       @keyframes pulseRing {
-        0%, 100% { opacity: 0.22; transform: scale(0.95); }
-        50% { opacity: 0.65; transform: scale(1.03); }
+        0%,
+        100% {
+          opacity: 0.22;
+          transform: scale(0.95);
+        }
+        50% {
+          opacity: 0.65;
+          transform: scale(1.03);
+        }
       }
       .status {
         margin: 0;
@@ -423,9 +453,13 @@
         font-weight: 500;
         color: var(--soft);
       }
-      .stage-viewport[data-surface="dark"] .status:not(.error) { color: #9aa5b1; }
+      .stage-viewport[data-surface="dark"] .status:not(.error) {
+        color: #9aa5b1;
+      }
       .stage-viewport[data-surface="light"] .status:not(.error),
-      .stage-viewport[data-surface="sand"] .status:not(.error) { color: #59625d; }
+      .stage-viewport[data-surface="sand"] .status:not(.error) {
+        color: #59625d;
+      }
       .status.error {
         color: var(--warn);
         background: var(--warn-soft);
@@ -528,7 +562,9 @@
         background: linear-gradient(90deg, var(--accent), var(--lagoon));
         transition: width 0.2s ease;
       }
-      .meter .bar.over span { background: var(--warn); }
+      .meter .bar.over span {
+        background: var(--warn);
+      }
       .export-actions {
         display: flex;
         align-items: center;
@@ -537,7 +573,8 @@
       }
 
       /* Buttons & Interactive Primitives */
-      button, .button {
+      button,
+      .button {
         font: inherit;
         font-size: 13px;
         font-weight: 600;
@@ -552,13 +589,19 @@
         align-items: center;
         justify-content: center;
         gap: 6px;
-        transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+        transition:
+          border-color 0.15s ease,
+          background-color 0.15s ease,
+          color 0.15s ease,
+          transform 0.1s ease;
       }
-      button:hover:not(:disabled), .button:hover {
+      button:hover:not(:disabled),
+      .button:hover {
         border-color: var(--accent);
         color: var(--ink);
       }
-      button:active:not(:disabled), .button:active {
+      button:active:not(:disabled),
+      .button:active {
         transform: translateY(1px);
       }
       button[aria-pressed="true"] {
@@ -582,7 +625,10 @@
         border-color: var(--accent-strong);
         color: var(--accent-ink);
       }
-      button:focus-visible, .button:focus-visible, input:focus-visible, select:focus-visible {
+      button:focus-visible,
+      .button:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: 2px;
       }
@@ -628,7 +674,11 @@
         width: 14px;
         height: 14px;
       }
-      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
 
       /* Account Lookup Card */
       .field-label {
@@ -637,8 +687,14 @@
         font-weight: 600;
         margin-bottom: 6px;
       }
-      .row { display: flex; gap: 8px; align-items: center; }
-      .account-row { flex-wrap: wrap; }
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .account-row {
+        flex-wrap: wrap;
+      }
       .input-shell {
         flex: 1 1 168px;
         min-width: 0;
@@ -649,7 +705,9 @@
         border: 1px solid var(--line);
         border-radius: 12px;
         padding: 0 11px;
-        transition: border-color 0.15s ease, background-color 0.15s ease;
+        transition:
+          border-color 0.15s ease,
+          background-color 0.15s ease;
       }
       .input-shell:focus-within {
         border-color: var(--accent);
@@ -671,7 +729,9 @@
         border: 0;
         padding: 8px 0;
       }
-      input[type="text"]:focus-visible { outline: none; }
+      input[type="text"]:focus-visible {
+        outline: none;
+      }
       #key {
         font-family: var(--font-mono);
         font-size: 12.5px;
@@ -683,7 +743,8 @@
         font-size: 12px;
         line-height: 1.45;
       }
-      .account-status, .account-result {
+      .account-status,
+      .account-result {
         font-size: 12.5px;
         overflow-wrap: anywhere;
       }
@@ -695,7 +756,9 @@
         border: 1px solid var(--line);
         color: var(--soft);
       }
-      .account-status:empty { display: none; }
+      .account-status:empty {
+        display: none;
+      }
       .account-status.error {
         color: var(--warn);
         background: var(--warn-soft);
@@ -708,7 +771,10 @@
         background: var(--well);
         border: 1px solid var(--line);
       }
-      .account-result p { margin: 4px 0; color: var(--soft); }
+      .account-result p {
+        margin: 4px 0;
+        color: var(--soft);
+      }
       .account-result p:first-child {
         margin-top: 0;
         font-weight: 700;
@@ -818,12 +884,17 @@
         border-radius: 14px;
         background: var(--well);
         border: 1px solid transparent;
-        transition: border-color 0.15s ease, background-color 0.15s ease;
+        transition:
+          border-color 0.15s ease,
+          background-color 0.15s ease;
       }
-      .signal:hover, .signal:focus-within {
+      .signal:hover,
+      .signal:focus-within {
         border-color: var(--line-strong);
       }
-      .signal + .signal { margin-top: 9px; }
+      .signal + .signal {
+        margin-top: 9px;
+      }
       .signal .head {
         display: flex;
         justify-content: space-between;
@@ -887,7 +958,9 @@
         background: var(--panel-solid);
         border: 2.5px solid var(--accent);
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
-        transition: transform 0.12s ease, box-shadow 0.12s ease;
+        transition:
+          transform 0.12s ease,
+          box-shadow 0.12s ease;
       }
       input[type="range"]::-webkit-slider-thumb:hover {
         transform: scale(1.12);
@@ -944,7 +1017,9 @@
         font-weight: 500;
         cursor: pointer;
       }
-      .toggle-card:hover { border-color: var(--line-strong); }
+      .toggle-card:hover {
+        border-color: var(--line-strong);
+      }
       .toggle-card input[type="checkbox"] {
         -webkit-appearance: none;
         appearance: none;
@@ -987,25 +1062,52 @@
       }
 
       @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
           animation-duration: 0.01ms !important;
           animation-iteration-count: 1 !important;
           transition-duration: 0.01ms !important;
         }
       }
       @media (max-width: 980px) {
-        main { grid-template-columns: 1fr; padding: 12px 16px 32px; gap: 18px; }
-        header { padding: 18px 16px 8px; }
-        footer { padding: 16px 16px 32px; }
-        .stage { position: static; }
-        .stage-viewport { min-height: 300px; padding: 12px; }
+        main {
+          grid-template-columns: 1fr;
+          padding: 12px 16px 32px;
+          gap: 18px;
+        }
+        header {
+          padding: 18px 16px 8px;
+        }
+        footer {
+          padding: 16px 16px 32px;
+        }
+        .stage {
+          position: static;
+        }
+        .stage-viewport {
+          min-height: 300px;
+          padding: 12px;
+        }
       }
       @media (max-width: 540px) {
-        .ecology-grid { grid-template-columns: 1fr; }
-        .stages-track { gap: 4px; }
-        .stage-step { font-size: 10.5px; padding: 8px 2px; }
-        .export-actions { width: 100%; }
-        .export-actions .button, .export-actions button { flex: 1; }
+        .ecology-grid {
+          grid-template-columns: 1fr;
+        }
+        .stages-track {
+          gap: 4px;
+        }
+        .stage-step {
+          font-size: 10.5px;
+          padding: 8px 2px;
+        }
+        .export-actions {
+          width: 100%;
+        }
+        .export-actions .button,
+        .export-actions button {
+          flex: 1;
+        }
       }
     </style>
   </head>
@@ -1019,7 +1121,9 @@
         <div class="topbar-actions">
           <a class="repo-link" href="https://github.com/AndrewDongminYoo/github-island">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+              <path
+                d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"
+              />
               <path d="M9 18c-4.51 2-5-2-7-2" />
             </svg>
             <span data-i18n="masthead.repo">Repository</span>
@@ -1031,7 +1135,10 @@
               <path d="M12 3a14.5 14.5 0 0 0 0 18 14.5 14.5 0 0 0 0-18" />
             </svg>
             <label for="language" data-i18n="language">Language</label>
-            <select id="language"><option value="en" lang="en">English</option><option value="ko" lang="ko">한국어</option></select>
+            <select id="language">
+              <option value="en" lang="en">English</option>
+              <option value="ko" lang="ko">한국어</option>
+            </select>
           </div>
         </div>
       </div>
@@ -1039,7 +1146,9 @@
         <div>
           <h1 data-i18n="page.title">GitHub Island playground</h1>
           <p>
-            <span data-i18n="intro.before">Try your GitHub username or adjust the signals. This page runs the same Python renderer as </span><a href="https://github.com/AndrewDongminYoo/github-island">github-island</a><span data-i18n="intro.after">, so the scene you see here is what a README would show.</span>
+            <span data-i18n="intro.before">Try your GitHub username or adjust the signals. This page runs the same Python renderer as </span
+            ><a href="https://github.com/AndrewDongminYoo/github-island">github-island</a
+            ><span data-i18n="intro.after">, so the scene you see here is what a README would show.</span>
           </p>
         </div>
       </div>
@@ -1090,7 +1199,10 @@
         <div class="ecology-grid" id="ecology" hidden>
           <div class="eco-card">
             <span class="eco-icon" aria-hidden="true">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M12 21c0-6-1-10-3-14" /><path d="M9 7c-3-1-6 1-7 4M9 7c-1-3 3-5 6-4M9 7c4-2 8 0 9 3M9 7c2 1 4 3 4 6" /></svg>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M12 21c0-6-1-10-3-14" />
+                <path d="M9 7c-3-1-6 1-7 4M9 7c-1-3 3-5 6-4M9 7c4-2 8 0 9 3M9 7c2 1 4 3 4 6" />
+              </svg>
             </span>
             <div class="eco-body">
               <span class="eco-label" data-i18n="eco.canopy">Canopy</span>
@@ -1099,7 +1211,11 @@
           </div>
           <div class="eco-card">
             <span class="eco-icon" aria-hidden="true">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M2 12s4-5 10-5 9 5 9 5-3 5-9 5-10-5-10-5Z" /><path d="M21 12l2-3v6l-2-3Z" /><circle cx="7.5" cy="11.5" r="0.8" fill="currentColor" /></svg>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M2 12s4-5 10-5 9 5 9 5-3 5-9 5-10-5-10-5Z" />
+                <path d="M21 12l2-3v6l-2-3Z" />
+                <circle cx="7.5" cy="11.5" r="0.8" fill="currentColor" />
+              </svg>
             </span>
             <div class="eco-body">
               <span class="eco-label" data-i18n="eco.marine">Marine life</span>
@@ -1108,7 +1224,11 @@
           </div>
           <div class="eco-card">
             <span class="eco-icon" aria-hidden="true">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M12 3L4 10h16L12 3Z" /><path d="M12 10v9" /><path d="M5 19h14" /></svg>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M12 3L4 10h16L12 3Z" />
+                <path d="M12 10v9" />
+                <path d="M5 19h14" />
+              </svg>
             </span>
             <div class="eco-body">
               <span class="eco-label" data-i18n="eco.visitors">Shore &amp; jetty</span>
@@ -1117,7 +1237,10 @@
           </div>
           <div class="eco-card">
             <span class="eco-icon" aria-hidden="true">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3Z" /><path d="M3 19c2.5-1.5 5-1.5 7.5 0s5 1.5 7.5 0 2.5-1 3-1.5" /></svg>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3Z" />
+                <path d="M3 19c2.5-1.5 5-1.5 7.5 0s5 1.5 7.5 0 2.5-1 3-1.5" />
+              </svg>
             </span>
             <div class="eco-body">
               <span class="eco-label" data-i18n="eco.horizon">Reefs &amp; horizon</span>
@@ -1133,11 +1256,17 @@
           </div>
           <div class="export-actions">
             <a class="button button-primary" id="download" download="island.svg" href="#">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></svg>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v12m0 0-4-4m4 4 4-4" />
+                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+              </svg>
               <span data-i18n="action.download">Download SVG</span>
             </a>
             <button type="button" id="copy">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
               <span id="copy-label" data-i18n="action.copy">Copy link</span>
             </button>
           </div>
@@ -1148,7 +1277,10 @@
           <form id="account-form" autocomplete="off">
             <div class="card-head">
               <h2>
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 20c1.8-3.6 5-5.5 8-5.5s6.2 1.9 8 5.5" /></svg>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c1.8-3.6 5-5.5 8-5.5s6.2 1.9 8 5.5" />
+                </svg>
                 <span data-i18n="account.title">Your island</span>
               </h2>
             </div>
@@ -1163,7 +1295,9 @@
               </button>
               <button type="button" id="cancel-account" data-i18n="action.cancel" hidden>Cancel lookup</button>
             </div>
-            <small class="hint-note" id="account-privacy" data-i18n="account.privacy">Your username is sent to the lookup service to read public activity. No sign-in or token needed.</small>
+            <small class="hint-note" id="account-privacy" data-i18n="account.privacy"
+              >Your username is sent to the lookup service to read public activity. No sign-in or token needed.</small
+            >
             <p class="account-status" id="account-status" role="status" aria-live="polite"></p>
             <div class="account-result" id="account-result" hidden></div>
           </form>
@@ -1171,7 +1305,12 @@
         <section class="card">
           <div class="card-head">
             <h2>
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+              </svg>
               <span data-i18n="presets.title">Presets</span>
             </h2>
           </div>
@@ -1180,7 +1319,11 @@
         <section class="card">
           <div class="card-head">
             <h2>
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-9" /><path d="M12 13C7 13 4 9.5 4 5c4.5 0 8 3 8 8Z" /><path d="M12 15c4.5 0 8-3 8-7.5-4.5 0-8 3-8 7.5Z" /></svg>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 22v-9" />
+                <path d="M12 13C7 13 4 9.5 4 5c4.5 0 8 3 8 8Z" />
+                <path d="M12 15c4.5 0 8-3 8-7.5-4.5 0-8 3-8 7.5Z" />
+              </svg>
               <span data-i18n="growth.title">Growth stage</span>
             </h2>
             <span class="badge" id="palm-badge"></span>
@@ -1210,7 +1353,10 @@
         <section class="card">
           <div class="card-head">
             <h2>
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4" /><path d="M10.85 12.15 19 4m-3 3 2 2m-4 0 2 2" /></svg>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="8" cy="15" r="4" />
+                <path d="M10.85 12.15 19 4m-3 3 2 2m-4 0 2 2" />
+              </svg>
               <span data-i18n="island.title">Island</span>
             </h2>
           </div>
@@ -1233,7 +1379,8 @@
       </div>
     </main>
     <footer data-i18n="footer">
-      Rendering and slider changes happen in your browser. Account lookup sends the entered username to the preview service. The page loads its Python runtime from jsDelivr and its fonts from Google Fonts, so both services receive a request when you open it.
+      Rendering and slider changes happen in your browser. Account lookup sends the entered username to the preview service. The page loads its Python runtime from jsDelivr and its
+      fonts from Google Fonts, so both services receive a request when you open it.
     </footer>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js"></script>
     <script type="module">
@@ -1267,7 +1414,11 @@
       let currentUrl = null;
       let surface = "auto";
       let storage;
-      try { storage = window.localStorage; } catch { /* Language storage is optional. */ }
+      try {
+        storage = window.localStorage;
+      } catch {
+        /* Language storage is optional. */
+      }
       let language = initialLanguage(storage, navigator.language);
       let runtimeMessage = "runtime.loading";
       let lookup = null;
@@ -1335,7 +1486,11 @@
         result.replaceChildren();
         result.hidden = !accountResult;
         if (!accountResult) return;
-        const add = (text) => { const p = document.createElement("p"); p.textContent = text; result.append(p); };
+        const add = (text) => {
+          const p = document.createElement("p");
+          p.textContent = text;
+          result.append(p);
+        };
         add(t(accountEdited ? "account.edited" : "account.result", { login: accountResult.subject.login }));
         add(t("account.bootstrap"));
         const lastDay = new Date(Date.parse(accountResult.activity_end + "T00:00:00Z") - 86400000).toISOString().slice(0, 10);
@@ -1402,11 +1557,21 @@
           const config = await response.json();
           if (typeof config.previewApi !== "string" || !config.previewApi) return;
           const url = new URL(config.previewApi);
-          if (url.username || url.password || url.search || url.hash ||
-              !(url.protocol === "https:" || (url.protocol === "http:" && ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)))) return;
+          if (
+            url.username ||
+            url.password ||
+            url.search ||
+            url.hash ||
+            !(url.protocol === "https:" || (url.protocol === "http:" && ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)))
+          )
+            return;
           lookup = createLookup({
-            baseUrl: config.previewApi.replace(/\/$/, ""), rules: { caps, stages },
-            onStatus: (value) => { lookupStatus = value; updateAccount(); },
+            baseUrl: config.previewApi.replace(/\/$/, ""),
+            rules: { caps, stages },
+            onStatus: (value) => {
+              lookupStatus = value;
+              updateAccount();
+            },
             onResult: (value) => {
               Object.assign(state, value.settings);
               accountResult = value;
@@ -1417,7 +1582,9 @@
           });
           lookupAvailable = true;
           lookupStatus = { code: "idle" };
-        } catch { /* Presets still work when the optional API is unavailable. */ }
+        } catch {
+          /* Presets still work when the optional API is unavailable. */
+        }
         updateAccount();
       }
 
@@ -1433,7 +1600,15 @@
       }
 
       function writeHash() {
-        history.replaceState(null, "", "#" + sceneHash(state, SIGNALS.map(([name]) => name)));
+        history.replaceState(
+          null,
+          "",
+          "#" +
+            sceneHash(
+              state,
+              SIGNALS.map(([name]) => name),
+            ),
+        );
       }
 
       function countFor(name, value) {
@@ -1505,13 +1680,9 @@
           box.className = "signal";
           const marks = name === "prs" ? cuts.prs : name === "reviews" || name === "outside" ? cuts.visitors : null;
           const ticks = marks
-            ? `<div class="ticks" id="ticks-${name}" aria-hidden="true">${marks
-                .map((cut) => `<i data-cut="${cut}" style="left:${cut * 100}%"></i>`)
-                .join("")}</div>`
+            ? `<div class="ticks" id="ticks-${name}" aria-hidden="true">${marks.map((cut) => `<i data-cut="${cut}" style="left:${cut * 100}%"></i>`).join("")}</div>`
             : "";
-          const driver = name === "reviews" || name === "outside"
-            ? `<span class="driver-pill" id="driver-${name}" hidden></span>`
-            : "";
+          const driver = name === "reviews" || name === "outside" ? `<span class="driver-pill" id="driver-${name}" hidden></span>` : "";
           box.innerHTML =
             `<div class="head"><span class="signal-title"><label for="s-${name}" data-i18n="signal.${name}">${label}</label>${driver}</span><output id="o-${name}" for="s-${name}"></output></div>` +
             `<div class="slider-wrap"><input type="range" id="s-${name}" min="0" max="1" step="0.01" />${ticks}</div>` +
@@ -1644,9 +1815,7 @@
         $("status").textContent = t(runtimeMessage);
         const list = await fetch("py/modules.json");
         if (!list.ok) {
-          throw new Error(
-            "this site has no renderer files (py/modules.json). Build it with tools/playground.py; serving the playground folder as it is does not work."
-          );
+          throw new Error("this site has no renderer files (py/modules.json). Build it with tools/playground.py; serving the playground folder as it is does not work.");
         }
         const modules = await list.json();
         pyodide.FS.mkdirTree("/app/github_island");
