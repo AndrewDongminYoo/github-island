@@ -6,14 +6,14 @@ It answers the two open points at the end of [the first publication note](2026-1
 
 ## The run
 
-| Fact           | Value                                                                                   |
-| -------------- | --------------------------------------------------------------------------------------- |
-| Workflow       | `Daily generation`, event `schedule`, cron `23 0 * * *`                                 |
-| Run            | [44695436143](https://github.com/AndrewDongminYoo/github-island/actions/runs/44695436143) |
-| Source commit  | `a0ef6491ec800c498439887db858fde613593db9` on `main`                                    |
-| Created        | 2026-11-20 07:30:17 UTC                                                                 |
-| Finished       | 2026-11-20 07:31:08 UTC, every step succeeded                                           |
-| Output commit  | `4f71a08`, `Publish island through 2026-11-19`, parent `9da4a10`                        |
+| Fact          | Value                                                                                     |
+| ------------- | ----------------------------------------------------------------------------------------- |
+| Workflow      | `Daily generation`, event `schedule`, cron `23 0 * * *`                                   |
+| Run           | [44695436143](https://github.com/AndrewDongminYoo/github-island/actions/runs/44695436143) |
+| Source commit | `a0ef6491ec800c498439887db858fde613593db9` on `main`                                      |
+| Created       | 2026-11-20 07:30:17 UTC                                                                   |
+| Finished      | 2026-11-20 07:31:08 UTC, every step succeeded                                             |
+| Output commit | `4f71a08`, `Publish island through 2026-11-19`, parent `9da4a10`                          |
 
 ## How late it started
 

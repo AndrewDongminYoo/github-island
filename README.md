@@ -145,11 +145,11 @@ The API URL is public configuration, not a secret.
 
 Set these variables only in the API's server environment:
 
-| Variable | Purpose |
-| --- | --- |
-| `PREVIEW_GH_TOKEN` | A dedicated credential that can read public GitHub GraphQL data. Never put it in Pages assets or browser input. |
-| `PREVIEW_ORIGIN` | Exact allowed browser origin, such as `https://andrewdongminyoo.github.io`, without a path or trailing slash. |
-| `PREVIEW_REPOSITORY` | Repository excluded from activity; defaults to `AndrewDongminYoo/github-island`. |
+| Variable             | Purpose                                                                                                         |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `PREVIEW_GH_TOKEN`   | A dedicated credential that can read public GitHub GraphQL data. Never put it in Pages assets or browser input. |
+| `PREVIEW_ORIGIN`     | Exact allowed browser origin, such as `https://andrewdongminyoo.github.io`, without a path or trailing slash.   |
+| `PREVIEW_REPOSITORY` | Repository excluded from activity; defaults to `AndrewDongminYoo/github-island`.                                |
 
 For local development, set `PREVIEW_GH_TOKEN` in the API process environment, then start the API and static site in separate terminals:
 

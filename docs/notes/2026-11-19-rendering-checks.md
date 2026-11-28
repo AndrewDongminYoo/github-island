@@ -5,11 +5,11 @@ The island is one SVG shown through an `<img>` tag, so what matters is how that 
 
 ## What was confirmed, and where
 
-| Renderer                                    | Result                                                                                         | Basis                                                                              |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| GitHub README on the web, Chrome, dark theme | The transparent island renders, and CSS and SMIL animation both play                            | Two captures a few seconds apart showed the fish school and a ray in new positions |
-| GitHub mobile app on iOS                    | Renders and animates                                                                           | Looked at by hand                                                                  |
-| Headless Chrome, local file                 | Every example renders; filters, masks, blend modes and `prefers-color-scheme` work in `<img>`  | Captures of each feature on its own and of the scenes                              |
+| Renderer                                     | Result                                                                                        | Basis                                                                              |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| GitHub README on the web, Chrome, dark theme | The transparent island renders, and CSS and SMIL animation both play                          | Two captures a few seconds apart showed the fish school and a ray in new positions |
+| GitHub mobile app on iOS                     | Renders and animates                                                                          | Looked at by hand                                                                  |
+| Headless Chrome, local file                  | Every example renders; filters, masks, blend modes and `prefers-color-scheme` work in `<img>` | Captures of each feature on its own and of the scenes                              |
 
 Not confirmed: Firefox, Safari with the current scenes, the light theme on GitHub, and playback cost.
 

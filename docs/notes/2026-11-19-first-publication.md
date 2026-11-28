@@ -5,15 +5,15 @@ This note is the evidence for the first live output of this repository and is cl
 
 ## The run
 
-| Fact               | Value                                                                                   |
-| ------------------ | --------------------------------------------------------------------------------------- |
-| Workflow           | `Daily generation`, manual dispatch with `bootstrap=true`                               |
-| Run                | [44542227258](https://github.com/AndrewDongminYoo/github-island/actions/runs/44542227258) |
-| Source commit      | `a617671bef670b16cc9801ee89461352f6ac8d5e` on `main`                                    |
-| Result             | Every step succeeded                                                                    |
-| Output commit      | `9da4a1082c7c46133d1cf5803b0a196790dc32e6`, the first commit on `output`                |
-| Commit subject     | `Publish island through 2026-11-18`                                                     |
-| Files on `output`  | `island.svg`, `manifest.json`, `state.json`                                             |
+| Fact              | Value                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| Workflow          | `Daily generation`, manual dispatch with `bootstrap=true`                                 |
+| Run               | [44542227258](https://github.com/AndrewDongminYoo/github-island/actions/runs/44542227258) |
+| Source commit     | `a617671bef670b16cc9801ee89461352f6ac8d5e` on `main`                                      |
+| Result            | Every step succeeded                                                                      |
+| Output commit     | `9da4a1082c7c46133d1cf5803b0a196790dc32e6`, the first commit on `output`                  |
+| Commit subject    | `Publish island through 2026-11-18`                                                       |
+| Files on `output` | `island.svg`, `manifest.json`, `state.json`                                               |
 
 ## What the manifest says
 
